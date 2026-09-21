@@ -50,7 +50,7 @@ body {  /* Corpo inteiro do site */
   margin-bottom: 30px;
 }
 
-.login-logo .em { /*🍕*/
+.login-logo .em { /*👾*/
   font-size: 2.8rem;
   display: block;
   margin-bottom: 10px;
@@ -192,7 +192,7 @@ body.logado #app        { display: flex; }
 
 .btn-logout:hover { border-color: var(--red); color: var(--red); } /*Botão do rodapé com estilo de passar o mouse*/
 
-#conteudo { /* Conteúdo do Dashboard*/
+#conteudo { /* Conteúdo do Calendário*/
   margin-left: 220px;
   flex: 1;
   min-height: 100vh;
@@ -200,7 +200,7 @@ body.logado #app        { display: flex; }
   flex-direction: column;
 }
 
-.pg-header { /*Área do botão "atualizar" e textos do Dashboard*/
+.pg-header { /*Área do botão "atualizar" e textos do Calendário*/
   padding: 24px 24px 0;
   display: flex;
   justify-content: space-between;
@@ -209,21 +209,21 @@ body.logado #app        { display: flex; }
   gap: 10px;
 }
 
-.pg-header h2 { /* Título do Dashboard*/
+.pg-header h2 { /* Título do Calendário*/
   font-size: 1.45rem;
   font-weight: 700;
   letter-spacing: -0.3px;
 }
 
-/* Paragráfo do Dashboard*/
+/* Paragráfo do Calendário*/
 .pg-header p { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
 
-.pg-body { padding: 16px 24px 24px; } /*Conteúdo do Dashboard*/
+.pg-body { padding: 16px 24px 24px; } /*Conteúdo do Calendário*/
 
 .secao       { display: none; } /*Seção*/
 .secao.ativa { display: block; } /*Seção ativo*/
 
-.stats-grid { /*Área de Dashboard com grid simetria*/
+.stats-grid { /*Área de Calendário com grid simetria*/
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
   gap: 12px;
@@ -261,7 +261,7 @@ body.logado #app        { display: flex; }
 /*=======================================================================*/
 
 
-.dash-grid { /*Área com  Pedidos Recentes e o Cardápio Ativo*/
+.cal-grid { /*Área com  Pedidos Recentes e o Cardápio Ativo*/
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 14px;
@@ -614,7 +614,7 @@ select option { background: var(--surf2); } /*Menus suspensos*/
   #sidebar .sb-footer span { display: none; }
   #sidebar .sb-logo { padding: 14px 8px; }
   #conteudo { margin-left: 52px; }
-  .dash-grid { grid-template-columns: 1fr; }
+  .cal-grid { grid-template-columns: 1fr; }
   .fr2, .fr3 { grid-template-columns: 1fr; }
   .pg-body { padding: 14px; }
 }
@@ -813,7 +813,7 @@ body.logado #app        { display: flex; }
 
 .btn-logout:hover { border-color: var(--red); color: var(--red); } /*Botão do rodapé com estilo de passar o mouse*/
 
-#conteudo { /* Conteúdo do Dashboard*/
+#conteudo { /* Conteúdo do Calendário*/
   margin-left: 220px;
   flex: 1;
   min-height: 100vh;
@@ -821,7 +821,7 @@ body.logado #app        { display: flex; }
   flex-direction: column;
 }
 
-.pg-header { /*Área do botão "atualizar" e textos do Dashboard*/
+.pg-header { /*Área do botão "atualizar" e textos do Calendário*/
   padding: 24px 24px 0;
   display: flex;
   justify-content: space-between;
@@ -830,21 +830,21 @@ body.logado #app        { display: flex; }
   gap: 10px;
 }
 
-.pg-header h2 { /* Título do Dashboard*/
+.pg-header h2 { /* Título do Calendário*/
   font-size: 1.45rem;
   font-weight: 700;
   letter-spacing: -0.3px;
 }
 
-/* Paragráfo do Dashboard*/
+/* Paragráfo do Calendário*/
 .pg-header p { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
 
-.pg-body { padding: 16px 24px 24px; } /*Conteúdo do Dashboard*/
+.pg-body { padding: 16px 24px 24px; } /*Conteúdo do Calendário*/
 
 .secao       { display: none; } /*Seção*/
 .secao.ativa { display: block; } /*Seção ativo*/
 
-.stats-grid { /*Área de Dashboard com grid simetria*/
+.stats-grid { /*Área de Calendário com grid simetria*/
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
   gap: 12px;
@@ -882,7 +882,7 @@ body.logado #app        { display: flex; }
 /*=======================================================================*/
 
 
-.dash-grid { /*Área com  Pedidos Recentes e o Cardápio Ativo*/
+.cal-grid { /*Área com  Pedidos Recentes e o Cardápio Ativo*/
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 14px;
@@ -1232,7 +1232,7 @@ select option { background: var(--surf2); } /*Menus suspensos*/
   #sidebar .sb-footer span { display: none; }
   #sidebar .sb-logo { padding: 14px 8px; }
   #conteudo { margin-left: 52px; }
-  .dash-grid { grid-template-columns: 1fr; }
+  .cal-grid { grid-template-columns: 1fr; }
   .fr2, .fr3 { grid-template-columns: 1fr; }
   .pg-body { padding: 14px; }
 }

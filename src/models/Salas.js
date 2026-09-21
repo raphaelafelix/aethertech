@@ -1,5 +1,5 @@
 // ============================================================
-// Peca.js — Model de Peca (sql.js)
+// sala.js — Model de sala (sql.js)
 // ============================================================
 
 
@@ -7,8 +7,8 @@ const { ready, query, run, get } = require('../database/sqlite'); //Parte que or
                                                                   //isso por meio do requerimento da rota do banco de dados.
 
 
-//Tabela do banco de dados para organizar e registrar os dados usado SQLite da Peca
-function formatarPeca(row) {
+//Tabela do banco de dados para organizar e registrar os dados usado SQLite da sala
+function formatarsala(row) {
   if (!row) return null;
   return {
     _id:         row.id,
@@ -23,44 +23,44 @@ function formatarPeca(row) {
 }
 
 
-//Bloco com os dados da Peca
-const Peca = {
+//Bloco com os dados da sala
+const sala = {
 
 
-  //Busca todas as pecas do menu , organizadas por categoria e nome
+  //Busca todas as salas do menu , organizadas por categoria e nome
   async findAll() {
     await ready;  //Executa quando o banco de dados estiver conectado, para evitar erros
-    return query('SELECT * FROM pecas ORDER BY categoria, nome').map(formatarPeca); // Ele vai retornar
+    return query('SELECT * FROM salas ORDER BY categoria, nome').map(formatarsala); // Ele vai retornar
   },
 
 
-  //Procura a Peca atraves do ID
+  //Procura a sala atraves do ID
   async findById(id) {
     await ready;  //Executa quando o banco de dados estiver conectado, para evitar erros
-    return formatarPeca(get('SELECT * FROM pecas WHERE id = ?', [id])); // Retorna a buscado da peca pelo ID, usado o map como forma de deixar os dados prontos para o JSOM
+    return formatarsala(get('SELECT * FROM salas WHERE id = ?', [id])); // Retorna a buscado da sala pelo ID, usado o map como forma de deixar os dados prontos para o JSOM
   },
 
 
-  //Adiciona no menu uma nova Peca a partir das categorias
+  //Adiciona no menu uma nova sala a partir das categorias
   async create({ nome, precos = {}, disponivel = true, categoria = '' }) {
     await ready;  //Executa quando o banco de dados estiver conectado, para evitar erros
     const info = run(
-      'INSERT INTO pecas (nome, precos, disponivel, categoria) VALUES (?, ?, ?, ?)',
+      'INSERT INTO salas (nome, precos, disponivel, categoria) VALUES (?, ?, ?, ?)',
       [nome.trim(), JSON.stringify(precos), disponivel ? 1 : 0, categoria]
     );
-    return this.findById(info.lastInsertRowid); //Retorna as informações para conferir os dados inseridos da nova Peca
+    return this.findById(info.lastInsertRowid); //Retorna as informações para conferir os dados inseridos da nova sala
   },
- //Atualiza os dados de uma Peca que ja existe no menu
+ //Atualiza os dados de uma sala que ja existe no menu
   async update(id, { nome, precos, disponivel, categoria }) {
     await ready;  //Executa quando o banco de dados estiver conectado, para evitar erros
-    const atual = get('SELECT * FROM pecas WHERE id = ?', [id]);
-    if (!atual) return null; //Caso não encontre a peca , ela não dará prosseguimento
+    const atual = get('SELECT * FROM salas WHERE id = ?', [id]);
+    if (!atual) return null; //Caso não encontre a sala , ela não dará prosseguimento
 
     const precosAtuais = JSON.parse(atual.precos || '{}');
     const precosFinal  = precos !== undefined ? precos : precosAtuais;
 
     run(`
-      UPDATE pecas SET
+      UPDATE salas SET
         nome         = ?,
         precos       = ?,
         disponivel   = ?,
@@ -78,13 +78,13 @@ const Peca = {
 
     return this.findById(id); // Retorna com as novas informações inseridas
   },
-  //Delta uma Peca através do ID
+  //Delta uma sala através do ID
   async delete(id) {
     await ready;
-    const info = run('DELETE FROM pecas WHERE id = ?', [id]); // seleciona o ID da Peca que será eliminada do menu
+    const info = run('DELETE FROM salas WHERE id = ?', [id]); // seleciona o ID da sala que será eliminada do menu
     return info.changes > 0; // Se houver alguma alteração no banco de dados , ela voltara o dado como true
   },
 };
 
 
-module.exports = Peca; // Modulo para executar a Peca
+module.exports = sala; // Modulo para executar a sala

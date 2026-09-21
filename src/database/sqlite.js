@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
  const DB_PATH = process.env.DB_PATH
-    || path.join(__dirname, '..', '..', 'pecas.db');
+    || path.join(__dirname, '..', '..', 'salas.db');
 
 // Módulo singleton - exporta { db, ready }
 // "ready" é uma Promise que resolve quando o banco estiver pronto.
@@ -48,7 +48,7 @@ const ready = (async () => {
     `);
 
     db.run(`
-        CREATE TABLE IF NOT EXISTS clientes (
+        CREATE TABLE IF NOT EXISTS professores (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
           nome        TEXT    NOT NULL,
           telefone    TEXT    NOT NULL,
@@ -61,7 +61,7 @@ const ready = (async () => {
     `);
 
     db.run(`
-        CREATE TABLE IF NOT EXISTS pecas (
+        CREATE TABLE IF NOT EXISTS salas (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
           nome        TEXT    NOT NULL,
           categoria   TEXT    NOT NULL DEFAULT '',
@@ -75,10 +75,10 @@ const ready = (async () => {
 
 
     db.run(`
-        CREATE TABLE IF NOT EXISTS pedidos (
+        CREATE TABLE IF NOT EXISTS solicitacoes (
           id                INTEGER PRIMARY KEY AUTOINCREMENT,
-          numero_pedido     INTEGER,
-          cliente_id        INTEGER NOT NULL REFERENCES clientes(id),
+          numero_solicitacao     INTEGER,
+          professor_id        INTEGER NOT NULL REFERENCES professores(id),
           subtotal          REAL    NOT NULL DEFAULT 0,
           taxa_entrega      REAL    NOT NULL DEFAULT 0,
           total             REAL    NOT NULL DEFAULT 0,
@@ -95,11 +95,11 @@ const ready = (async () => {
     `);
 
     db.run(`
-        CREATE TABLE IF NOT EXISTS itens_pedidos (
+        CREATE TABLE IF NOT EXISTS itens_solicitacoes (
           id                INTEGER PRIMARY KEY AUTOINCREMENT,
-          pedido_id         INTEGER NOT NULL REFERENCES pedidos(id),
-          peca_id           INTEGER NOT NULL REFERENCES pecas(id),
-          nome_peca         TEXT    NOT NULL,
+          solicitacao_id         INTEGER NOT NULL REFERENCES solicitacoes(id),
+          sala_id           INTEGER NOT NULL REFERENCES salas(id),
+          nome_sala         TEXT    NOT NULL,
           quantidade        INTEGER NOT NULL DEFAULT 1,
           preco_unitario    REAL    NOT NULL DEFAULT 0,
           subtotal          REAL    NOT NULL DEFAULT 0

@@ -1,8 +1,8 @@
 
 const API = '/api';
 
-let cpecas    = [];
-let cClientes = [];
+let csalas    = [];
+let cprofessores = [];
 
 let TOKEN          = localStorage.getItem('pz_token') || '';
 let USUARIO_LOGADO = JSON.parse(localStorage.getItem('pz_usuario') || 'null');
@@ -38,7 +38,7 @@ function abrir(id)  { document.getElementById(id).classList.add('open'); }
 function fechar(id) { document.getElementById(id).classList.remove('open'); }
 
 document.querySelectorAll('.modal-bg').forEach(bg =>
-  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); })
+  bg.addEventListener('profck', e => { if (e.target === bg) bg.classList.remove('open'); })
 );
 
 async function api(method, url, body) {
@@ -125,7 +125,7 @@ function aplicarPerfil(usuario) {
   document.getElementById('sb-nome').textContent   = usuario.nome;
   document.getElementById('sb-perfil').textContent = usuario.perfil;
 
-  const isAdmin = usuario.perfil === 'Administrador';
+  const iscoord = usuario.perfil === 'coordenador';
 
   function show(id, visible, type = 'flex') {
     const el = document.getElementById(id);
@@ -135,27 +135,27 @@ function aplicarPerfil(usuario) {
     if (el) el.style.display = visible ? type : 'none';
   }
 
-  show('menu-usuarios',   isAdmin, 'block');
-  show('btn-usuarios',    isAdmin, 'flex');
+  show('menu-usuarios',   iscoord, 'block');
+  show('btn-usuarios',    iscoord, 'flex');
   show('sb-group-gestor', true,    'block');
   show('btn-nav-setores', true,    'flex');
 
-  showEl(document.querySelector('[onclick*="clientes"]'),  true);
-  showEl(document.querySelector('[onclick*="pedidos"]'),   true);
-  showEl(document.querySelector('[onclick*="dashboard"]'), true);
+  showEl(document.querySelector('[onclick*="professores"]'),  true);
+  showEl(document.querySelector('[onclick*="solicitacoes"]'),   true);
+  showEl(document.querySelector('[onclick*="calendario"]'), true);
   showEl(document.querySelector('.sb-group'),              true, 'block');
 
-  show('btn-nova-peca', true, 'inline-flex');
+  show('btn-nova-sala', true, 'inline-flex');
   show('stat-fat',      true, 'block');
-  show('stat-cli',      true, 'block');
+  show('stat-prof',      true, 'block');
 
-  ir('dashboard', document.querySelector('[onclick*="dashboard"]'));
+  ir('calendario', document.querySelector('[onclick*="calendario"]'));
 }
 
 function ir(pg, btn) {
   const perfil = document.getElementById('sb-perfil').textContent;
-  if (pg === 'usuarios' && perfil !== 'Administrador') {
-    toast('Acesso restrito a Administradores', 'err');
+  if (pg === 'usuarios' && perfil !== 'coordenador') {
+    toast('Acesso restrito a coordenadores', 'err');
     return;
   }
   document.querySelectorAll('.secao').forEach(s => s.classList.remove('ativa'));
@@ -164,10 +164,10 @@ function ir(pg, btn) {
   if (btn) btn.classList.add('ativo');
 
   const loaders = {
-    dashboard: carregarDashboard,
-    pedidos:   carregarPedidos,
-    pecas:     carregarpecas,
-    clientes:  carregarClientes,
+    calendario: carregarcalendario,
+    solicitacoes:   carregarsolicitacoes,
+    salas:     carregarsalas,
+    professores:  carregarprofessores,
     usuarios:  carregarUsuarios,
     setores:   carregarsetores,
   };
@@ -175,40 +175,40 @@ function ir(pg, btn) {
 }
 
 // ============================================================
-// DASHBOARD
+// calendario
 // ============================================================
 
-async function carregarDashboard() {
+async function carregarcalendario() {
   const h = new Date().getHours();
   const s = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-  document.getElementById('dash-sub').textContent = `${s}! Aqui está o resumo.`;
+  document.getElementById('cal-sub').textContent = `${s}! Aqui está o resumo.`;
 
   try {
-    const [pecas, clientes, pedidos] = await Promise.all([
-      api('GET', '/pecas'),
-      api('GET', '/clientes'),
-      api('GET', '/pedidos'),
+    const [salas, professores, solicitacoes] = await Promise.all([
+      api('GET', '/salas'),
+      api('GET', '/professores'),
+      api('GET', '/solicitacoes'),
     ]);
 
-    cpecas    = pecas;
-    cClientes = clientes;
+    csalas    = salas;
+    cprofessores = professores;
 
-    document.getElementById('s-piz').textContent = pecas.length;
-    document.getElementById('s-cli').textContent = clientes.length;
-    document.getElementById('s-ped').textContent = pedidos.length;
+    document.getElementById('s-piz').textContent = salas.length;
+    document.getElementById('s-prof').textContent = professores.length;
+    document.getElementById('s-soli').textContent = solicitacoes.length;
     document.getElementById('s-ent').textContent =
-      pedidos.filter(p => p.status === 'saiu_entrega').length;
+      solicitacoes.filter(p => p.status === 'saiu_entrega').length;
     document.getElementById('s-fat').textContent =
-      R$(pedidos.reduce((acc, p) => acc + (p.total || 0), 0));
+      R$(solicitacoes.reduce((acc, p) => acc + (p.total || 0), 0));
 
-    const pend = pedidos.filter(p => !['entregue','cancelado'].includes(p.status)).length;
-    document.getElementById('s-ped-sub').textContent = `${pend} pendente(s)`;
+    const pend = solicitacoes.filter(p => !['entregue','cancelado'].includes(p.status)).length;
+    document.getElementById('s-soli-sub').textContent = `${pend} pendente(s)`;
 
-    const elP = document.getElementById('dash-pedidos');
-    elP.innerHTML = pedidos.slice(0, 8).map(p => `
+    const elP = document.getElementById('cal-solicitacoes');
+    elP.innerHTML = solicitacoes.slice(0, 8).map(p => `
       <div class="mini-row">
         <div>
-          <div class="mn">#${String(p.numeroPedido || '?').padStart(3,'0')} · ${p.cliente?.nome || '—'}</div>
+          <div class="mn">#${String(p.numerosolicitacao || '?').padStart(3,'0')} · ${p.professor?.nome || '—'}</div>
           <div class="mc">${new Date(p.createdAt).toLocaleString('pt-BR')}</div>
         </div>
         <div style="text-align:right">
@@ -216,17 +216,17 @@ async function carregarDashboard() {
           <small style="color:var(--muted)">${R$(p.total)}</small>
         </div>
       </div>`).join('') ||
-      '<div class="empty"><span class="ei">📋</span>Nenhum pedido ainda</div>';
+      '<div class="empty"><span class="ei">📋</span>Nenhuma solicitação ainda</div>';
 
-    const elC = document.getElementById('dash-cardapio');
-    elC.innerHTML = pecas.filter(p => p.disponivel).slice(0, 8).map(p => `
+    const elC = document.getElementById('cal-mapa');
+    elC.innerHTML = salas.filter(p => p.disponivel).slice(0, 8).map(p => `
       <div class="mini-row">
         <span>🛰️ ${p.nome}</span>
         <small style="color:var(--muted)">${R$(p.precos?.G || p.precos?.P || 0)}</small>
       </div>`).join('') ||
-      '<div class="empty"><span class="ei">⚙️</span>Nenhuma peça</div>';
+      '<div class="empty"><span class="ei">⚙️</span>Nenhuma sala</div>';
 
-  } catch (e) { toast('Erro dashboard: ' + e.message, 'err'); }
+  } catch (e) { toast('Erro calendario: ' + e.message, 'err'); }
 }
 
 // ============================================================
@@ -238,17 +238,17 @@ async function carregarsetores(setorFiltro = null) {
   grid.innerHTML = '<div class="spin-wrap"><div class="spin"></div> Carregando...</div>';
 
   document.getElementById('setores-sub').textContent =
-    `Olá, ${USUARIO_LOGADO?.nome}! Seus pedidos ativos.`;
+    `Olá, ${USUARIO_LOGADO?.nome}! Suas solicitações ativas.`;
 
   try {
-    const url    = USUARIO_LOGADO?.perfil === 'Administrador'
-      ? '/pedidos'
-      : `/pedidos?gestor=${USUARIO_LOGADO.id}`;
-    const pedidos = await api('GET', url);
-    const ativos  = pedidos.filter(p => !['entregue','cancelado'].includes(p.status));
+    const url    = USUARIO_LOGADO?.perfil === 'coordenador'
+      ? '/solicitacoes'
+      : `/solicitacoes?gestor=${USUARIO_LOGADO.id}`;
+    const solicitacoes = await api('GET', url);
+    const ativos  = solicitacoes.filter(p => !['entregue','cancelado'].includes(p.status));
 
-    document.getElementById('g-ped').textContent     = pedidos.length;
-    document.getElementById('g-ped-sub').textContent = `${ativos.length} ativo(s)`;
+    document.getElementById('g-soli').textContent     = solicitacoes.length;
+    document.getElementById('g-soli-sub').textContent = `${ativos.length} ativo(s)`;
 
     const setoresAtivas = new Set(ativos.map(p => p.setor).filter(Boolean));
     document.getElementById('g-setores').textContent  = setoresAtivas.size;
@@ -258,50 +258,50 @@ async function carregarsetores(setorFiltro = null) {
     const botoes = document.getElementById('setor-botoes');
     botoes.innerHTML = Array.from({length: 10}, (_, i) => {
       const n      = i + 1;
-      const temPed = setoresAtivas.has(n);
+      const temsoli = setoresAtivas.has(n);
       const ativo  = setorFiltro === n;
       return `
-        <button class="btn btn-sm ${ativo ? 'btn-red' : temPed ? 'btn-green' : 'btn-ghost'}"
+        <button class="btn btn-sm ${ativo ? 'btn-red' : temsoli ? 'btn-green' : 'btn-ghost'}"
           onclick="carregarsetores(${n})"
-          title="${temPed ? 'Setor com pedido ativo' : 'Setor livre'}">
-          ${n}${temPed ? ' 🔴' : ''}
+          title="${temsoli ? 'Setor com solicitacao ativo' : 'Setor livre'}">
+          ${n}${temsoli ? ' 🔴' : ''}
         </button>`;
     }).join('');
 
-    const pedidosFiltrados = setorFiltro
+    const solicitacoesFiltrados = setorFiltro
       ? ativos.filter(p => p.setor === setorFiltro)
       : ativos;
 
-    if (!pedidosFiltrados.length) {
+    if (!solicitacoesFiltrados.length) {
       grid.innerHTML = `
         <div class="empty" style="grid-column:1/-1">
           <span class="ei">🚚</span>
-          Nenhum pedido ativo no momento.<br>
-          <button class="btn btn-red" style="margin-top:12px" onclick="abrirPedidosetor()">
-            + Abrir primeiro pedido
+          Nenhum solicitacao ativo no momento.<br>
+          <button class="btn btn-red" style="margin-top:12px" onclick="abrirsolicitacoesetor()">
+            + Abrir primeiro solicitacao
           </button>
         </div>`;
       return;
     }
 
     const porsetor = {};
-    pedidosFiltrados.forEach(p => {
+    solicitacoesFiltrados.forEach(p => {
       const key = p.setor || 'balcão';
       if (!porsetor[key]) porsetor[key] = [];
       porsetor[key].push(p);
     });
 
-    grid.innerHTML = Object.entries(porsetor).map(([setor, peds]) => {
-      const totalsetor  = peds.reduce((s, p) => s + (p.total || 0), 0);
-      const todosItens  = peds.flatMap(p => p.itens);
+    grid.innerHTML = Object.entries(porsetor).map(([setor, solis]) => {
+      const totalsetor  = solis.reduce((s, p) => s + (p.total || 0), 0);
+      const todosItens  = solis.flatMap(p => p.itens);
       const itensAgrup  = {};
       todosItens.forEach(it => {
-        const nome = it.nomePeca || '—';
+        const nome = it.nomesala || '—';
         const size = it.tamanho ? ` (${it.tamanho})` : '';
         const k    = `${nome}${size}`;
         itensAgrup[k] = (itensAgrup[k] || 0) + it.quantidade;
       });
-      const statusAtual = peds[peds.length - 1]?.status;
+      const statusAtual = solis[solis.length - 1]?.status;
 
       return `
         <div class="setor-card">
@@ -309,7 +309,7 @@ async function carregarsetores(setorFiltro = null) {
             <div>
               <div class="setor-num">Setor ${setor}</div>
               <div style="font-size:.72rem;color:var(--muted);margin-top:2px">
-                ${peds.length} pedido(s) · ${peds[0]?.cliente?.nome || 'Sem cadastro'}
+                ${solis.length} solicitacao(s) · ${solis[0]?.professor?.nome || 'Sem cadastro'}
               </div>
             </div>
             ${badge(statusAtual)}
@@ -324,13 +324,13 @@ async function carregarsetores(setorFiltro = null) {
           </div>
           <div class="setor-card-foot">
             <button class="btn btn-ghost btn-sm" style="flex:1"
-              onclick="abrirPedidosetor(${setor})">+ Item</button>
+              onclick="abrirsolicitacoesetor(${setor})">+ Item</button>
             <button class="btn btn-blue btn-sm"
-              onclick="abrirStatus('${peds[peds.length-1]?._id}','${statusAtual}')">
+              onclick="abrirStatus('${solis[solis.length-1]?._id}','${statusAtual}')">
               📝 Status
             </button>
             <button class="btn btn-green btn-sm"
-              onclick="abrirFecharsetor(${setor}, ${totalsetor}, '${peds.map(p=>p._id).join(',')}')">
+              onclick="abrirFecharsetor(${setor}, ${totalsetor}, '${solis.map(p=>p._id).join(',')}')">
               ✅ Fechar
             </button>
           </div>
@@ -342,15 +342,15 @@ async function carregarsetores(setorFiltro = null) {
   }
 }
 
-async function abrirPedidosetor(setorNum = null) {
+async function abrirsolicitacoesetor(setorNum = null) {
   try {
-    if (!cpecas.length)    cpecas    = await api('GET', '/pecas');
-    if (!cClientes.length) cClientes = await api('GET', '/clientes');
+    if (!csalas.length)    csalas    = await api('GET', '/salas');
+    if (!cprofessores.length) cprofessores = await api('GET', '/professores');
   } catch (e) { toast('Erro ao carregar dados', 'err'); return; }
 
-  document.getElementById('pm-cli').innerHTML =
+  document.getElementById('pm-prof').innerHTML =
     '<option value="">— Sem cadastro —</option>' +
-    cClientes.map(c => `<option value="${c._id}">${c.nome} · ${c.telefone}</option>`).join('');
+    cprofessores.map(c => `<option value="${c._id}">${c.nome} · ${c.telefone}</option>`).join('');
 
   document.getElementById('pm-setor').value = setorNum || '';
   document.getElementById('itens-setor-lista').innerHTML = '';
@@ -359,13 +359,13 @@ async function abrirPedidosetor(setorNum = null) {
   document.getElementById('pm-tot').textContent = 'R$ 0,00';
 
   addItemsetor();
-  abrir('m-pedido-setor');
+  abrir('m-solicitacao-setor');
 }
 
 function addItemsetor() {
   const d    = document.createElement('div');
   d.className = 'item-row';
-  const opts = cpecas.filter(p => p.disponivel)
+  const opts = csalas.filter(p => p.disponivel)
     .map(p => `<option value="${p._id}"
       data-p="${p.precos?.P||0}" data-m="${p.precos?.M||0}" data-g="${p.precos?.G||0}">
       ${p.nome}</option>`).join('');
@@ -395,11 +395,11 @@ function recalcsetor() {
   document.getElementById('pm-tot').textContent = R$(sub);
 }
 
-async function salvarPedidosetor() {
+async function salvarsolicitacoesetor() {
   const setor = parseInt(document.getElementById('pm-setor').value) || 0;
   if (!setor || setor < 1) { toast('Selecione o setor', 'err'); return; }
 
-  const cliId = document.getElementById('pm-cli').value || null;
+  const profId = document.getElementById('pm-prof').value || null;
   const itens = [];
   let valido  = true;
 
@@ -407,7 +407,7 @@ async function salvarPedidosetor() {
     const pid = row.querySelector('.ip').value;
     if (!pid) { valido = false; return; }
     itens.push({
-      peca:       pid,
+      sala:       pid,
       tamanho:    row.querySelector('.it').value,
       quantidade: parseInt(row.querySelector('.iq').value) || 1,
     });
@@ -415,24 +415,24 @@ async function salvarPedidosetor() {
 
   if (!valido || !itens.length) { toast('Adicione ao menos um item', 'err'); return; }
 
-  let clienteId = cliId;
-  if (!clienteId) {
+  let professorId = profId;
+  if (!professorId) {
     try {
-      const todos  = await api('GET', `/clientes?busca=Setor ${setor}`);
+      const todos  = await api('GET', `/professores?busca=Setor ${setor}`);
       const existe = todos.find(c => c.nome === `Setor ${setor}`);
       if (existe) {
-        clienteId = existe._id;
+        professorId = existe._id;
       } else {
-        const novo = await api('POST', '/clientes', { nome: `Setor ${setor}`, telefone: 'setor' });
-        clienteId  = novo._id;
-        cClientes  = [];
+        const novo = await api('POST', '/professores', { nome: `Setor ${setor}`, telefone: 'setor' });
+        professorId  = novo._id;
+        cprofessores  = [];
       }
     } catch (e) { toast('Erro ao registrar setor', 'err'); return; }
   }
 
   try {
-    await api('POST', '/pedidos', {
-      cliente:        clienteId,
+    await api('POST', '/solicitacoes', {
+      professor:        professorId,
       itens,
       taxaEntrega:    0,
       formaPagamento: 'pix',
@@ -441,8 +441,8 @@ async function salvarPedidosetor() {
       origem:         'setor',
       gestor:         USUARIO_LOGADO?.id,
     });
-    toast(`Pedido lançado no setor ${setor}! 🛰️`);
-    fechar('m-pedido-setor');
+    toast(`solicitacao lançado no setor ${setor}! 🛰️`);
+    fechar('m-solicitacao-setor');
     carregarsetores();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
@@ -453,7 +453,7 @@ function abrirFecharsetor(setor, total, ids) {
   document.getElementById('fm-total').textContent  = R$(total);
   document.getElementById('fm-resumo').innerHTML   =
     `<p style="font-size:.82rem;color:var(--muted)">
-      ${setorEmFechamento.ids.length} pedido(s) serão marcados como
+      ${setorEmFechamento.ids.length} solicitacao(s) serão marcados como
       <strong style="color:var(--green)">Entregue</strong>.
     </p>`;
   abrir('m-fechar-setor');
@@ -464,7 +464,7 @@ async function confirmarFechamento() {
   try {
     await Promise.all(
       setorEmFechamento.ids.map(id =>
-        api('PATCH', `/pedidos/${id}/status`, { status: 'entregue' })
+        api('PATCH', `/solicitacoes/${id}/status`, { status: 'entregue' })
       )
     );
     toast(`Setor ${setorEmFechamento.setor} fechado! ✅`);
@@ -475,16 +475,16 @@ async function confirmarFechamento() {
 }
 
 // ============================================================
-// PEÇAS
+// salaS
 // ============================================================
 
-async function carregarpecas() {
-  const el = document.getElementById('tbl-pecas');
+async function carregarsalas() {
+  const el = document.getElementById('tbl-salas');
   el.innerHTML = '<div class="spin-wrap"><div class="spin"></div> Carregando...</div>';
   try {
-    cpecas = await api('GET', '/pecas');
-    if (!cpecas.length) {
-      el.innerHTML = '<div class="empty"><span class="ei">⚙️</span>Nenhuma peça</div>';
+    csalas = await api('GET', '/salas');
+    if (!csalas.length) {
+      el.innerHTML = '<div class="empty"><span class="ei">⚙️</span>Nenhuma sala</div>';
       return;
     }
     el.innerHTML = `
@@ -493,7 +493,7 @@ async function carregarpecas() {
           <tr><th>Nome</th><th>Categoria</th><th>Status</th><th>Preço (P)</th><th>Ações</th></tr>
         </thead>
         <tbody>
-          ${cpecas.map(p => `
+          ${csalas.map(p => `
             <tr>
               <td><strong>${p.nome}</strong></td>
               <td><span class="badge b-cat">${p.categoria || '—'}</span></td>
@@ -505,8 +505,8 @@ async function carregarpecas() {
               })())}</td>
               <td>
                 <div style="display:flex;gap:5px">
-                  <button class="btn btn-ghost btn-sm" onclick="editarpeca('${p._id}')">✏️ Editar</button>
-                  <button class="btn btn-danger btn-sm" onclick="deletarpeca('${p._id}','${p.nome.replace(/'/g,"\\'")}')">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="editarsala('${p._id}')">✏️ Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="deletarsala('${p._id}','${p.nome.replace(/'/g,"\\'")}')">🗑️</button>
                 </div>
               </td>
             </tr>`).join('')}
@@ -517,29 +517,29 @@ async function carregarpecas() {
   }
 }
 
-function abrirpeca() {
-  document.getElementById('m-peca-t').textContent = 'Nova Peça';
+function abrirsala() {
+  document.getElementById('m-sala-t').textContent = 'Nova sala';
   document.getElementById('p-id').value    = '';
   document.getElementById('p-nome').value  = '';
   document.getElementById('p-pp').value    = '';
   document.getElementById('p-cat').value   = 'Motor';
   document.getElementById('p-disp').value  = 'true';
-  abrir('m-peca');
+  abrir('m-sala');
 }
 
-async function editarpeca(id) {
-  let p = cpecas.find(x => String(x._id) === String(id));
+async function editarsala(id) {
+  let p = csalas.find(x => String(x._id) === String(id));
 
   if (!p) {
     try {
-      p = await api('GET', '/pecas/' + id);
+      p = await api('GET', '/salas/' + id);
     } catch (e) {
-      toast('Erro ao carregar peça: ' + e.message, 'err');
+      toast('Erro ao carregar sala: ' + e.message, 'err');
       return;
     }
   }
 
-  document.getElementById('m-peca-t').textContent = 'Editar Peça';
+  document.getElementById('m-sala-t').textContent = 'Editar sala';
   document.getElementById('p-id').value   = p._id;
   document.getElementById('p-nome').value = p.nome;
 
@@ -558,10 +558,10 @@ async function editarpeca(id) {
   document.getElementById('p-pp').value   = precoValor;
   document.getElementById('p-cat').value  = p.categoria || 'Motor';
   document.getElementById('p-disp').value = String(p.disponivel);
-  abrir('m-peca');
+  abrir('m-sala');
 }
 
-async function salvarpeca() {
+async function salvarsala() {
   const id   = document.getElementById('p-id').value;
   const nome = document.getElementById('p-nome').value.trim();
   if (!nome) { toast('Nome é obrigatório', 'err'); return; }
@@ -575,41 +575,41 @@ async function salvarpeca() {
 
   try {
     if (id) {
-      await api('PUT', '/pecas/' + id, d);
-      toast('Peça atualizada! ✅');
+      await api('PUT', '/salas/' + id, d);
+      toast('sala atualizada! ✅');
     } else {
-      await api('POST', '/pecas', d);
-      toast('Peça criada! ✅');
+      await api('POST', '/salas', d);
+      toast('sala criada! ✅');
     }
-    fechar('m-peca');
-    cpecas = [];
-    carregarpecas();
+    fechar('m-sala');
+    csalas = [];
+    carregarsalas();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
 
-async function deletarpeca(id, nome) {
+async function deletarsala(id, nome) {
   if (!confirm(`Deletar "${nome}"?`)) return;
   try {
-    await api('DELETE', '/pecas/' + id);
-    toast('Peça deletada!');
-    cpecas = [];
-    carregarpecas();
+    await api('DELETE', '/salas/' + id);
+    toast('sala deletada!');
+    csalas = [];
+    carregarsalas();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
 
 // ============================================================
-// CLIENTES
+// professores
 // ============================================================
 
-async function carregarClientes(busca = '') {
-  const el = document.getElementById('tbl-clientes');
+async function carregarprofessores(busca = '') {
+  const el = document.getElementById('tbl-professores');
   el.innerHTML = '<div class="spin-wrap"><div class="spin"></div> Carregando...</div>';
   try {
-    const url = busca ? `/clientes?busca=${encodeURIComponent(busca)}` : '/clientes';
-    cClientes = await api('GET', url);
+    const url = busca ? `/professores?busca=${encodeURIComponent(busca)}` : '/professores';
+    cprofessores = await api('GET', url);
 
-    if (!cClientes.length) {
-      el.innerHTML = '<div class="empty"><span class="ei">👥</span>Nenhum cliente</div>';
+    if (!cprofessores.length) {
+      el.innerHTML = '<div class="empty"><span class="ei">👥</span>Nenhum professor</div>';
       return;
     }
 
@@ -617,7 +617,7 @@ async function carregarClientes(busca = '') {
       <table>
         <thead><tr><th>Nome</th><th>Telefone</th><th>Endereço</th><th>Obs</th><th>Ações</th></tr></thead>
         <tbody>
-          ${cClientes.map(c => `
+          ${cprofessores.map(c => `
             <tr>
               <td><strong>${c.nome}</strong></td>
               <td>${c.telefone}</td>
@@ -628,8 +628,8 @@ async function carregarClientes(busca = '') {
               <td style="font-size:.76rem;color:var(--muted)">${c.observacoes || '—'}</td>
               <td>
                 <div style="display:flex;gap:5px">
-                  <button class="btn btn-ghost btn-sm" onclick="editarCliente('${c._id}')">✏️ Editar</button>
-                  <button class="btn btn-danger btn-sm" onclick="deletarCliente('${c._id}','${c.nome.replace(/'/g,"\\'")}')">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="editarprofessor('${c._id}')">✏️ Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="deletarprofessor('${c._id}','${c.nome.replace(/'/g,"\\'")}')">🗑️</button>
                 </div>
               </td>
             </tr>`).join('')}
@@ -641,31 +641,31 @@ async function carregarClientes(busca = '') {
 }
 
 let _t;
-function buscarCli(v) {
+function buscarprof(v) {
   clearTimeout(_t);
-  _t = setTimeout(() => carregarClientes(v), 400);
+  _t = setTimeout(() => carregarprofessores(v), 400);
 }
 
-function abrirCliente() {
-  document.getElementById('m-cli-t').textContent = 'Novo Cliente';
+function abrirprofessor() {
+  document.getElementById('m-prof-t').textContent = 'Novo professor';
   ['c-id','c-nome','c-tel','c-rua','c-num','c-bairro','c-cidade','c-cep','c-comp','c-obs']
     .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
-  abrir('m-cliente');
+  abrir('m-professor');
 }
 
-async function editarCliente(id) {
-  let c = cClientes.find(x => x._id === id || String(x._id) === String(id));
+async function editarprofessor(id) {
+  let c = cprofessores.find(x => x._id === id || String(x._id) === String(id));
 
   if (!c) {
     try {
-      c = await api('GET', '/clientes/' + id);
+      c = await api('GET', '/professores/' + id);
     } catch (e) {
-      toast('Erro ao carregar cliente: ' + e.message, 'err');
+      toast('Erro ao carregar professor: ' + e.message, 'err');
       return;
     }
   }
 
-  document.getElementById('m-cli-t').textContent    = 'Editar Cliente';
+  document.getElementById('m-prof-t').textContent    = 'Editar professor';
   document.getElementById('c-id').value     = c._id;
   document.getElementById('c-nome').value   = c.nome;
   document.getElementById('c-tel').value    = c.telefone;
@@ -676,10 +676,10 @@ async function editarCliente(id) {
   document.getElementById('c-cep').value    = c.endereco?.cep         || '';
   document.getElementById('c-comp').value   = c.endereco?.complemento || '';
   document.getElementById('c-obs').value    = c.observacoes           || '';
-  abrir('m-cliente');
+  abrir('m-professor');
 }
 
-async function salvarCliente() {
+async function salvarprofessor() {
   const id   = document.getElementById('c-id').value;
   const nome = document.getElementById('c-nome').value.trim();
   const tel  = document.getElementById('c-tel').value.trim();
@@ -701,61 +701,61 @@ async function salvarCliente() {
 
   try {
     if (id) {
-      await api('PUT', '/clientes/' + id, d);
-      toast('Cliente atualizado! ✅');
+      await api('PUT', '/professores/' + id, d);
+      toast('professor atualizado! ✅');
     } else {
-      await api('POST', '/clientes', d);
-      toast('Cliente cadastrado! ✅');
+      await api('POST', '/professores', d);
+      toast('professor cadastrado! ✅');
     }
-    fechar('m-cliente');
-    cClientes = [];
-    carregarClientes();
+    fechar('m-professor');
+    cprofessores = [];
+    carregarprofessores();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
 
-async function deletarCliente(id, nome) {
+async function deletarprofessor(id, nome) {
   if (!confirm(`Deletar "${nome}"?`)) return;
   try {
-    await api('DELETE', '/clientes/' + id);
-    toast('Cliente deletado!');
-    cClientes = [];
-    carregarClientes();
+    await api('DELETE', '/professores/' + id);
+    toast('professor deletado!');
+    cprofessores = [];
+    carregarprofessores();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
 
 // ============================================================
-// PEDIDOS
+// solicitacoes
 // ============================================================
 
-async function carregarPedidos() {
-  const el = document.getElementById('tbl-pedidos');
+async function carregarsolicitacoes() {
+  const el = document.getElementById('tbl-solicitacoes');
   el.innerHTML = '<div class="spin-wrap"><div class="spin"></div> Carregando...</div>';
   try {
-    const pedidos = await api('GET', '/pedidos');
-    if (!pedidos.length) {
-      el.innerHTML = '<div class="empty"><span class="ei">📋</span>Nenhum pedido</div>';
+    const solicitacoes = await api('GET', '/solicitacoes');
+    if (!solicitacoes.length) {
+      el.innerHTML = '<div class="empty"><span class="ei">📋</span>Nenhum solicitacao</div>';
       return;
     }
     el.innerHTML = `
       <table>
         <thead>
           <tr>
-            <th>#</th><th>Cliente</th><th>Itens</th><th>Subtotal</th>
+            <th>#</th><th>professor</th><th>Itens</th><th>Subtotal</th>
             <th>Entrega</th><th>Total</th><th>Pagamento</th><th>Status</th>
             <th>Data</th><th>Ações</th>
           </tr>
         </thead>
         <tbody>
-          ${pedidos.map(p => `
+          ${solicitacoes.map(p => `
             <tr>
-              <td><strong style="color:var(--red)">#${String(p.numeroPedido||'?').padStart(3,'0')}</strong></td>
+              <td><strong style="color:var(--red)">#${String(p.numerosolicitacao||'?').padStart(3,'0')}</strong></td>
               <td>
-                <strong>${p.cliente?.nome || '—'}</strong><br>
-                <small style="color:var(--muted)">${p.cliente?.telefone || ''}</small>
+                <strong>${p.professor?.nome || '—'}</strong><br>
+                <small style="color:var(--muted)">${p.professor?.telefone || ''}</small>
               </td>
               <td style="font-size:.76rem">
                 ${p.itens.map(it =>
-                  `${it.quantidade}x ${it.nomePeca || it.nome_peca || '?'}${it.tamanho ? ` (${it.tamanho})` : ''} — ${R$(it.precoUnitario ?? it.preco_unitario ?? 0)}`
+                  `${it.quantidade}x ${it.nomesala || it.nome_sala || '?'}${it.tamanho ? ` (${it.tamanho})` : ''} — ${R$(it.precoUnitario ?? it.preco_unitario ?? 0)}`
                 ).join('<br>')}
               </td>
               <td>${R$(p.subtotal)}</td>
@@ -767,7 +767,7 @@ async function carregarPedidos() {
               <td>
                 <div style="display:flex;gap:5px">
                   <button class="btn btn-blue btn-sm" onclick="abrirStatus('${p._id}','${p.status}')">📝</button>
-                  <button class="btn btn-danger btn-sm" onclick="deletarPedido('${p._id}')">🗑️</button>
+                  <button class="btn btn-danger btn-sm" onclick="deletarsolicitacao('${p._id}')">🗑️</button>
                 </div>
               </td>
             </tr>`).join('')}
@@ -778,32 +778,32 @@ async function carregarPedidos() {
   }
 }
 
-async function abrirPedido() {
+async function abrirsolicitacao() {
   try {
-    cpecas    = await api('GET', '/pecas');
-    cClientes = await api('GET', '/clientes');
+    csalas    = await api('GET', '/salas');
+    cprofessores = await api('GET', '/professores');
   } catch (e) { toast('Erro ao carregar dados', 'err'); return; }
 
-  document.getElementById('ped-cli').innerHTML =
-    '<option value="">— Selecione o cliente —</option>' +
-    cClientes.map(c => `<option value="${c._id}">${c.nome} · ${c.telefone}</option>`).join('');
+  document.getElementById('soli-prof').innerHTML =
+    '<option value="">— Selecione o professor —</option>' +
+    cprofessores.map(c => `<option value="${c._id}">${c.nome} · ${c.telefone}</option>`).join('');
 
   document.getElementById('itens-lista').innerHTML = '';
-  document.getElementById('ped-taxa').value  = '0';
-  document.getElementById('ped-obs').value   = '';
-  document.getElementById('ped-pag').value   = 'pix';
-  document.getElementById('ped-sub').textContent = 'R$ 0,00';
-  document.getElementById('ped-tot').textContent = 'R$ 0,00';
+  document.getElementById('soli-taxa').value  = '0';
+  document.getElementById('soli-obs').value   = '';
+  document.getElementById('soli-pag').value   = 'pix';
+  document.getElementById('soli-sub').textContent = 'R$ 0,00';
+  document.getElementById('soli-tot').textContent = 'R$ 0,00';
   document.getElementById('wrap-troco').style.display = 'none';
 
   addItem();
-  abrir('m-pedido');
+  abrir('m-solicitacao');
 }
 
 function addItem() {
   const d    = document.createElement('div');
   d.className = 'item-row';
-  const opts = cpecas
+  const opts = csalas
     .filter(p => p.disponivel)
     .map(p => `<option value="${p._id}" data-p="${p.precos?.P||0}" data-m="${p.precos?.M||0}" data-g="${p.precos?.G||0}">${p.nome}</option>`)
     .join('');
@@ -826,20 +826,20 @@ function recalc() {
     sub += s;
     row.querySelector('.is').textContent = R$(s);
   });
-  const taxa = parseFloat(document.getElementById('ped-taxa').value) || 0;
-  document.getElementById('ped-sub').textContent = R$(sub);
-  document.getElementById('ped-tot').textContent = R$(sub + taxa);
+  const taxa = parseFloat(document.getElementById('soli-taxa').value) || 0;
+  document.getElementById('soli-sub').textContent = R$(sub);
+  document.getElementById('soli-tot').textContent = R$(sub + taxa);
 }
 
 function toggleTroco() {
-  const pag = document.getElementById('ped-pag').value;
+  const pag = document.getElementById('soli-pag').value;
   document.getElementById('wrap-troco').style.display =
     pag === 'dinheiro' ? 'block' : 'none';
 }
 
-async function salvarPedido() {
-  const cliId = document.getElementById('ped-cli').value;
-  if (!cliId) { toast('Selecione um cliente', 'err'); return; }
+async function salvarsolicitacao() {
+  const profId = document.getElementById('soli-prof').value;
+  if (!profId) { toast('Selecione um professor', 'err'); return; }
 
   const itens = [];
   let valido  = true;
@@ -847,7 +847,7 @@ async function salvarPedido() {
     const pid = row.querySelector('.ip').value;
     if (!pid) { valido = false; return; }
     itens.push({
-      peca:       pid,
+      sala:       pid,
       quantidade: parseInt(row.querySelector('.iq').value) || 1,
       tamanho:    'P',
     });
@@ -859,23 +859,23 @@ async function salvarPedido() {
   }
 
   try {
-    await api('POST', '/pedidos', {
-      cliente:        cliId,
+    await api('POST', '/solicitacoes', {
+      professor:        profId,
       itens,
-      taxaEntrega:    parseFloat(document.getElementById('ped-taxa').value) || 0,
-      formaPagamento: document.getElementById('ped-pag').value,
-      troco:          parseFloat(document.getElementById('ped-troco')?.value) || 0,
-      observacoes:    document.getElementById('ped-obs').value,
+      taxaEntrega:    parseFloat(document.getElementById('soli-taxa').value) || 0,
+      formaPagamento: document.getElementById('soli-pag').value,
+      troco:          parseFloat(document.getElementById('soli-troco')?.value) || 0,
+      observacoes:    document.getElementById('soli-obs').value,
     });
-    toast('Pedido criado! 🛰️');
-    fechar('m-pedido');
-    carregarPedidos();
+    toast('solicitacao criado! 🛰️');
+    fechar('m-solicitacao');
+    carregarsolicitacoes();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
 
 function abrirStatus(id, status) {
   if (!id || id === 'undefined') {
-    toast('Pedido não encontrado', 'err');
+    toast('solicitacao não encontrado', 'err');
     return;
   }
   document.getElementById('st-id').value  = id;
@@ -887,22 +887,22 @@ async function salvarStatus() {
   const id     = document.getElementById('st-id').value;
   const status = document.getElementById('st-val').value;
   try {
-    await api('PATCH', '/pedidos/' + id + '/status', { status });
+    await api('PATCH', '/solicitacoes/' + id + '/status', { status });
     toast('Status atualizado! ✅');
     fechar('m-status');
     const secaoAtiva = document.querySelector('.secao.ativa')?.id;
-    if (secaoAtiva === 'pg-pedidos')  carregarPedidos();
+    if (secaoAtiva === 'pg-solicitacoes')  carregarsolicitacoes();
     if (secaoAtiva === 'pg-setores')  carregarsetores();
-    if (secaoAtiva === 'pg-dashboard') carregarDashboard();
+    if (secaoAtiva === 'pg-calendario') carregarcalendario();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
 
-async function deletarPedido(id) {
-  if (!confirm('Deletar este pedido?')) return;
+async function deletarsolicitacao(id) {
+  if (!confirm('Deletar este solicitacao?')) return;
   try {
-    await api('DELETE', '/pedidos/' + id);
-    toast('Pedido deletado!');
-    carregarPedidos();
+    await api('DELETE', '/solicitacoes/' + id);
+    toast('solicitacao deletado!');
+    carregarsolicitacoes();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
 }
 
@@ -927,7 +927,7 @@ async function carregarUsuarios() {
             <tr>
               <td><strong>${u.nome}</strong></td>
               <td>${u.email}</td>
-              <td><span class="badge ${u.perfil === 'Administrador' ? 'b-admin' : 'b-atend'}">${u.perfil}</span></td>
+              <td><span class="badge ${u.perfil === 'coordenador' ? 'b-coord' : 'b-atend'}">${u.perfil}</span></td>
               <td><span class="badge ${u.ativo ? 'b-on' : 'b-off'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
               <td style="font-size:.73rem;color:var(--muted)">${new Date(u.createdAt).toLocaleDateString('pt-BR')}</td>
               <td><button class="btn btn-danger btn-sm" onclick="deletarUsuario('${u._id}','${u.nome.replace(/'/g,"\\'")}')">🗑️</button></td>

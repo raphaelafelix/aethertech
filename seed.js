@@ -7,13 +7,13 @@ async function seed() {
         await ready;
         console.log('Limpando banco...');
 
-        run('DELETE FROM pedidos');
-        run('DELETE FROM pecas');
-        run('DELETE FROM clientes');
+        run('DELETE FROM solicitacoes');
+        run('DELETE FROM salas');
+        run('DELETE FROM professores');
         run('DELETE FROM usuarios');
 
         try {
-            run("DELETE FROM sqlite_sequence WHERE name IN ('itens_pedido','pedidos','pecas','clientes','usuarios')");
+            run("DELETE FROM sqlite_sequence WHERE name IN ('itens_solicitacoes','solicitacoes','salas','professores','usuarios')");
         } catch(_) { }
 
         console.log('Banco limpo');
@@ -21,7 +21,7 @@ async function seed() {
         const hash = await bcrypt.hash('123456', 10);
 
         run('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
-            ['Administrador', 'admin@email.com', hash, 'Administrador']);
+            ['coordenador', 'coord@email.com', hash, 'coordenador']);
         run('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
             ['Funcionario', 'funcionario@email.com', hash, 'Funcionario']);
         run('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
@@ -30,7 +30,7 @@ async function seed() {
         console.log('3 usuario criadas');
 
 
-        const pecas = [
+        const salas = [
             ['Pistões e Virabrequim','Motor e Transmissão', {P:1500}],
             ['Correia Dentada', 'Motor e Transmissão', {P:250}],
             ['Embreagem e Câmbio', 'Motor e Transmissão', {P:400}],
@@ -58,16 +58,16 @@ async function seed() {
             ['Para-lama', 'Carroceria e Acabamento', {P:250}]
         ];
 
-        for (const [nome, cat, precos] of pecas) {
-            run('INSERT INTO pecas (nome, categoria, precos) VALUES (?, ?, ?)',
+        for (const [nome, cat, precos] of salas) {
+            run('INSERT INTO salas (nome, categoria, precos) VALUES (?, ?, ?)',
                 [nome, cat, JSON.stringify(precos)]);
         }
-        console.log('20 pecas criadas')
+        console.log('20 salas criadas')
 
         console.log('======================================');
         console.log('SEED EXECUTADO COM SUCESSO!');
         console.log('======================================');
-        console.log('Login: admin@email.com | Senha: 123456');
+        console.log('Login: coord@email.com | Senha: 123456');
         console.log('======================================');
     } catch (err) {
         console.error('ERRO NO SEED:', err);
