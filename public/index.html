@@ -1,64 +1,40 @@
-<!-- Os comentários adicionados em todos os arquivos foram digitados na mão, sem o uso de inteligência artificial, pois a gente não é todo mundo 👍-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>👾 Agendamento de Salas</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👾 AetherTech · Agendamento de Salas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
- <!-- // ================================== LOGIN ============================= // -->
+
 <div id="tela-login">
-
   <div class="login-box">
-
-    
     <div class="login-logo">
       <span class="em">👾</span>
       <h1>AetherTech</h1>
-      <p>Agendamento de Salas · Faça login para continuar</p>
+      <p>Agendamento de Salas · Entre para continuar</p>
     </div>
-
     <div class="login-erro" id="login-erro"></div>
-
     <div class="fg">
       <label>E-mail</label>
-      <input id="l-email" type="email" placeholder="coordenador@email.com"
-        onkeydown="if(event.key==='Enter') fazerLogin()">
+      <input id="l-email" type="email" placeholder="coord@email.com" onkeydown="if(event.key==='Enter') fazerLogin()">
     </div>
-
     <div class="fg">
       <label>Senha</label>
-      <input id="l-senha" type="password" placeholder="••••••"
-        onkeydown="if(event.key==='Enter') fazerLogin()">
+      <input id="l-senha" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter') fazerLogin()">
     </div>
-
-    <button class="btn btn-red" id="btn-login" 
-      style="width:100%;padding:10px;margin-top:4px"
-      onclick="fazerLogin()">
-      Entrar
-    </button>
-
+    <button class="btn btn-red" id="btn-login" style="width:100%;padding:10px" onclick="fazerLogin()">Entrar</button>
     <p style="text-align:center;font-size:.69rem;color:var(--muted);margin-top:14px">
-      Rode <strong style="color:var(--text)">node seed.js</strong> para criar o coordenador inicial
+      Login inicial: <strong style="color:var(--text)">coord@email.com</strong> · senha <strong style="color:var(--text)">123456</strong>
     </p>
-
   </div>
-
 </div>
-
-<!-- // ================================== FIM LOGIN ============================= // -->
-
-
-
-<!-- // ================================== TELA INICIAL ============================= // -->
 
 <div id="app">
   <aside id="sidebar">
-
     <div class="sb-logo">
       <h1>👾 AetherTech</h1>
       <div class="sb-user">
@@ -68,525 +44,214 @@
     </div>
 
     <nav class="sb-nav">
-
       <div class="sb-group">Geral</div>
-      <button class="nav-btn ativo" onclick="ir('calendario',this)">
-        <span class="ic">🗓️</span><span>Calendário</span>
-      </button>
+      <button class="nav-btn ativo" onclick="ir('calendario',this)"><span class="ic">🗓️</span><span>Calendário</span></button>
+      <button class="nav-btn" onclick="ir('solicitacoes',this)"><span class="ic">📋</span><span>Agendamentos</span></button>
 
-      <button class="nav-btn" onclick="ir('solicitacoes',this)">
-        <span class="ic">📋</span><span>Solicitações</span>
-      </button>
-      
       <div class="sb-group">Cadastros</div>
-      <button class="nav-btn" onclick="ir('salas',this)">
-        <span class="ic">🏫</span><span id="nav-salas-label">Salas</span>
-      </button>
-
-      <button class="nav-btn" onclick="ir('professores',this)">
-        <span class="ic">👥</span><span>Professores</span>
-      </button>
+      <button class="nav-btn" onclick="ir('salas',this)"><span class="ic">🏫</span><span>Salas</span></button>
+      <button class="nav-btn" onclick="ir('professores',this)"><span class="ic">👥</span><span>Professores</span></button>
 
       <div class="sb-group" id="menu-usuarios" style="display:none">Sistema</div>
-      <button class="nav-btn" id="btn-usuarios" onclick="ir('usuarios',this)"
-        style="display:none">
-        <span class="ic">🔐</span><span>Usuários</span>
-      </button>
-
-      <div class="sb-group" id="sb-group-gestor" style="display:none">setores</div>
-      <button class="nav-btn" id="btn-nav-setores" onclick="ir('setores',this)"
-        style="display:none">
-        <span class="ic">🛠️</span><span>Setores</span>
-      </button>
-
+      <button class="nav-btn" id="btn-usuarios" onclick="ir('usuarios',this)" style="display:none"><span class="ic">🔐</span><span>Usuários</span></button>
     </nav>
 
     <div class="sb-footer">
-      <span>v2.0</span>
+      <span>v3.0 · Salas</span>
       <button class="btn-logout" onclick="sair()">Sair</button>
     </div>
-  </aside>~
-  
+  </aside>
+
   <div id="conteudo">
     <section id="pg-calendario" class="secao ativa">
-
       <div class="pg-header">
-        <div>
-          <h2>Calendário</h2>
-          <p id="cal-sub">Resumo do sistema</p>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="carregarcalendario()">↻ Atualizar</button>
+        <div><h2>Calendário</h2><p>Visão geral dos agendamentos e disponibilidade das salas</p></div>
+        <button class="btn btn-ghost btn-sm" onclick="carregarTudo()">↻ Atualizar</button>
       </div>
-
       <div class="pg-body">
-
         <div class="stats-grid">
-
-          <div class="stat cr">
-            <span class="ico">📋</span>
-            <div class="lbl">Solicitações</div>
-            <div class="val" id="s-soli">—</div>
-            <div class="sub" id="s-soli-sub">carregando</div>
-          </div>
-
-          
-
-          <div class="stat cg" id="stat-prof">
-            <span class="ico">👥</span>
-            <div class="lbl">Professores</div>
-            <div class="val" id="s-prof">—</div>
-            <div class="sub">cadastrados</div>
-          </div>
-
-          <div class="stat cb">
-            <span class="ico">🏫</span>
-            <div class="lbl">Salas</div>
-            <div class="val" id="s-piz">—</div>
-            <div class="sub">disponíveis</div>
-          </div>
-
-
+          <div class="stat cr"><span class="ico">📅</span><div class="lbl">Agendamentos</div><div class="val" id="s-soli">—</div><div class="sub" id="s-soli-sub">cadastrados</div></div>
+          <div class="stat cg"><span class="ico">👥</span><div class="lbl">Professores</div><div class="val" id="s-prof">—</div><div class="sub">cadastrados</div></div>
+          <div class="stat cb"><span class="ico">🏫</span><div class="lbl">Salas livres</div><div class="val" id="s-piz">—</div><div class="sub">disponíveis para reserva</div></div>
+          <div class="stat cp"><span class="ico">⏰</span><div class="lbl">Pendentes</div><div class="val" id="s-pend">—</div><div class="sub">aguardando aprovação</div></div>
         </div>
 
         <div class="cal-grid">
-
           <div class="card">
-
             <div class="card-head">
-              <h3>Solicitações Recentes</h3>
-              <button class="btn btn-red btn-sm"
-                onclick="ir('solicitacoes', document.querySelector('[onclick*=solicitacoes]'))">
-                + Novo
-              </button>
+              <h3>Próximos agendamentos</h3>
+              <button class="btn btn-red btn-sm" onclick="abrirsolicitacao()">+ Novo</button>
             </div>
-
-            <div class="card-body" id="cal-solicitacoes">
-              <div class="spin-wrap"><div class="spin"></div> Carregando...</div>
-            </div>
-
+            <div class="card-body" id="cal-solicitacoes"></div>
           </div>
-
           <div class="card">
-
-            <div class="card-head"><h3>Salas Ativas</h3></div>
-
-            <div class="card-body" id="cal-mapa">
-              <div class="spin-wrap"><div class="spin"></div> Carregando...</div>
-            </div>
-
+            <div class="card-head"><h3>Salas</h3></div>
+            <div class="card-body" id="cal-mapa"></div>
           </div>
-
         </div>
-
       </div>
-
     </section>
 
     <section id="pg-solicitacoes" class="secao">
-
-      <div class="pg-header">  
-        <div><h2>Solicitações</h2><p>Acompanhe e gerencie os solicitacoes</p></div> 
-        <button class="btn btn-red" onclick="abrirsolicitacao()">+ Nova solicitação</button>
+      <div class="pg-header">
+        <div><h2>Agendamentos</h2><p>Crie, acompanhe, aprove e cancele reservas de salas.</p></div>
+        <button class="btn btn-red" onclick="abrirsolicitacao()">+ Novo agendamento</button>
       </div>
-
       <div class="pg-body">
-
         <div class="card">
-
-          <div class="card-body tbl-wrap" id="tbl-solicitacoes">
-            <div class="spin-wrap"><div class="spin"></div> Carregando...</div>
-          </div>
-
+          <div class="card-body tbl-wrap" id="tbl-solicitacoes"></div>
         </div>
       </div>
-
     </section>
 
     <section id="pg-salas" class="secao">
-
       <div class="pg-header">
-
-        <div>
-          <h2 id="pg-salas-titulo">Salas</h2>  
-          <p id="pg-salas-sub">Gerencie o registro de sala</p>
-        </div>
-    
-        <button class="btn btn-red" id="btn-nova-sala" onclick="abrirsala()">+ Nova sala</button>
+        <div><h2>Salas</h2><p>Consulte as salas. Apenas o Coordenador pode cadastrar, editar ou alterar a disponibilidade.</p></div>
+        <button class="btn btn-red somente-coordenador" id="btn-nova-sala" onclick="abrirsala()">+ Nova sala</button>
       </div>
-
-
       <div class="pg-body">
-
-        <div class="card">
-
-          <div class="card-body tbl-wrap" id="tbl-salas">
-            <div class="spin-wrap"><div class="spin"></div> Carregando...</div>
-          </div>
-
-        </div>
+        <div class="card"><div class="card-body tbl-wrap" id="tbl-salas"></div></div>
       </div>
     </section>
 
     <section id="pg-professores" class="secao">
-
       <div class="pg-header">
-
-        <div><h2>professores</h2><p>Cadastre e busque professores</p></div> 
-        <button class="btn btn-red" onclick="abrirprofessor()">+ Novo professor</button>
+        <div><h2>Professores</h2><p>Consulte os professores. Apenas o Coordenador pode cadastrar ou editar.</p></div>
+        <button class="btn btn-red somente-coordenador" id="btn-novo-professor" onclick="abrirprofessor()">+ Novo professor</button>
       </div>
-
       <div class="pg-body">
-
-        <div style="margin-bottom:12px">
-          <input id="busca-prof" placeholder="🔍  Buscar por nome..."
-            style="max-width:270px" oninput="buscarprof(this.value)">
-        </div>
-
-        <div class="card">
-
-          <div class="card-body tbl-wrap" id="tbl-professores">
-            <div class="spin-wrap"><div class="spin"></div> Carregando...</div>
-          </div>
-
-        </div>
-
-
+        <div style="margin-bottom:12px"><input id="busca-prof" placeholder="🔍 Buscar por nome..." style="max-width:300px" oninput="buscarprof(this.value)"></div>
+        <div class="card"><div class="card-body tbl-wrap" id="tbl-professores"></div></div>
       </div>
-
     </section>
 
     <section id="pg-usuarios" class="secao">
-
       <div class="pg-header">
-
-        <div><h2>Usuários</h2><p>Administradores e coordenadores</p></div>
-        <button class="btn btn-ghost" onclick="abrirUsuario()">+ Novo Usuário</button>
+        <div><h2>Usuários</h2><p>Gerencie os acessos ao sistema.</p></div>
+        <button class="btn btn-ghost" onclick="abrirUsuario()">+ Novo usuário</button>
       </div>
-
-      <div class="pg-body">
-
-        <div class="card">
-
-          <div class="card-body tbl-wrap" id="tbl-usuarios">
-            <div class="spin-wrap"><div class="spin"></div> Carregando...</div>
-          </div> 
-
-        </div>
-
-      </div>
-
-    </section>
-
-    <section id="pg-setores" class="secao">
-
-      <div class="pg-header">
-
-        <div>
-          <h2>Setores</h2>
-          <p id="setores-sub">Suas solicitações ativos</p>
-        </div>
-
-        <button class="btn btn-red" onclick="abrirsolicitacoesetor()">+ Nova solicitação</button>
-      </div>
-
-      <div class="pg-body">
-
-        <div class="stats-grid" style="margin-bottom:18px">
-
-          <div class="stat cr">
-            <span class="ico">📋</span>
-            <div class="lbl">Minhas solicitações</div>
-            <div class="val" id="g-soli">—</div>
-            <div class="sub" id="g-soli-sub">hoje</div>
-          </div>
-          
-          <div class="stat cg">
-            <span class="ico">🛠️</span>
-            <div class="lbl">Setores ativos</div>
-            <div class="val" id="g-setores">—</div>
-            <div class="sub">com solicitação aberta</div>
-          </div>
-
-          <div class="stat cb">
-            <span class="ico">🔩</span>
-            <div class="lbl">Em Fabricação</div>
-            <div class="val" id="g-preparo">—</div>
-            <div class="sub">sendo preparados</div>
-          </div>
-
-          <div class="stat cp">
-            <span class="ico">🚚</span>
-            <div class="lbl">Para entregar</div>
-            <div class="val" id="g-prontos">—</div>
-            <div class="sub">aguardando retirada</div>
-          </div>
-
-        </div>
-
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <span style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px">setor:</span>
-          <div style="display:flex;gap:5px;flex-wrap:wrap" id="setor-botoes"></div>
-          <button class="btn btn-ghost btn-sm" onclick="carregarsetores(null)">Todas</button>
-        </div>
-
-        <div id="grid-setores" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;">
-          <div class="spin-wrap"><div class="spin"></div> Carregando...</div>
-        </div>
-
-      </div>
-
+      <div class="pg-body"><div class="card"><div class="card-body tbl-wrap" id="tbl-usuarios"></div></div></div>
     </section>
   </div>
-
 </div>
 
-<!-- // ==================================  NOVA sala ============================= // -->
-
+<!-- SALA -->
 <div id="m-sala" class="modal-bg">
-
   <div class="modal">
-
     <h3 id="m-sala-t">Nova sala</h3>
     <input type="hidden" id="p-id">
-
     <div class="fr2">
-      <div class="fg"><label>Nome *</label><input id="p-nome" placeholder="Ex: Correia"></div>
-
+      <div class="fg"><label>Nome *</label><input id="p-nome" placeholder="Ex.: Sala de Informática 01"></div>
       <div class="fg"><label>Categoria</label>
-
         <select id="p-cat">
-          <option value="Motor">Motor</option>
-          <option value="Suspensão">Suspensão</option>
-          <option value="Freios">Freios</option>
-          <option value="Elétrica">Elétrica</option>
-          <option value="Carroceria">Carroceira</option>
-          
+          <option value="Sala de aula">Sala de aula</option>
+          <option value="Laboratório">Laboratório</option>
+          <option value="Reunião">Reunião</option>
+          <option value="Multimídia">Multimídia</option>
+          <option value="Evento">Evento</option>
         </select>
-
       </div>
-
     </div>
-
-    <div class="fr3">
-      <div class="fg"><label>Média dos preços (R$)</label><input id="p-pp" type="number" step="0.01" min="0" placeholder="250,00"></div>
+    <div class="fr2">
+      <div class="fg"><label>Capacidade de pessoas</label><input id="p-cap" type="number" min="1" placeholder="30"></div>
+      <div class="fg"><label>Localização</label><input id="p-local" placeholder="Bloco A - 1º andar"></div>
     </div>
-
-    <div class="fg"><label>Disponível</label>
-      <select id="p-disp">
-        <option value="true">✅ Sim</option>
-        <option value="false">❌ Não</option>
-      </select>
+    <div class="fg"><label>Recursos disponíveis</label><input id="p-recursos" placeholder="Projetor, computadores, Wi-Fi..."></div>
+    <div class="fg"><label>Status</label>
+      <select id="p-disp"><option value="true">✅ Disponível</option><option value="false">❌ Indisponível</option></select>
     </div>
-
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="fechar('m-sala')">Cancelar</button>
-      <button class="btn btn-red"   onclick="salvarsala()">Salvar</button>
+      <button class="btn btn-red" onclick="salvarsala()">Salvar sala</button>
     </div>
-
   </div>
-
 </div>
 
-<!-- // ==================================  NOVO professor ============================= // -->
-
+<!-- PROFESSOR -->
 <div id="m-professor" class="modal-bg">
-
   <div class="modal">
-
     <h3 id="m-prof-t">Novo professor</h3>
     <input type="hidden" id="c-id">
-
     <div class="fr2">
-      <div class="fg"><label>Nome *</label><input id="c-nome" placeholder="João da Silva"></div>
+      <div class="fg"><label>Nome *</label><input id="c-nome" placeholder="Nome completo"></div>
       <div class="fg"><label>Telefone *</label><input id="c-tel" placeholder="(11) 99999-9999"></div>
     </div>
-
-    <div class="fr2"> 
-      <div class="fg"><label>Rua</label><input id="c-rua" placeholder="Rua das Flores"></div>
-      <div class="fg"><label>Número</label><input id="c-num" placeholder="123"></div>
-    </div>
-
-    <div class="fr3">
-      <div class="fg"><label>Bairro</label><input id="c-bairro" placeholder="Centro"></div>
-      <div class="fg"><label>Cidade</label><input id="c-cidade" placeholder="São Paulo"></div>
-      <div class="fg"><label>CEP</label><input id="c-cep" placeholder="00000-000"></div>
-    </div>
-
-    <div class="fg"><label>Complemento</label><input id="c-comp" placeholder="Apto 12, Bloco B"></div>
-    <div class="fg"><label>Observações</label><input id="c-obs" placeholder=" "></div>
-
+    <div class="fg"><label>Observações</label><input id="c-obs" placeholder="Informações adicionais"></div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="fechar('m-professor')">Cancelar</button>
-      <button class="btn btn-red"   onclick="salvarprofessor()">Salvar</button>
+      <button class="btn btn-red" onclick="salvarprofessor()">Salvar professor</button>
     </div>
-
   </div>
-
 </div>
 
-<!-- // ==================================  NOVa solicitacao ============================= // -->
+<!-- NOVO AGENDAMENTO -->
 <div id="m-solicitacao" class="modal-bg">
-
   <div class="modal lg">
-
-    <h3>Nova solicitação</h3>
-
-    <div class="fg"><label>Professor *</label><select id="soli-prof"></select></div>
-    <div class="div"></div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
-      <label style="margin-bottom:0;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">Itens da solicitação</label>
-      <button class="btn btn-ghost btn-sm" onclick="addItem()">+ Sala</button>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 68px 58px 68px 30px;gap:6px;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;padding:0 1px">
-      <span>Sala</span><span>Qtd</span><span>Subtotal</span><span></span>
-    </div>
-
-    <div id="itens-lista"></div>
-
-    <div class="total-box">
-      <div class="row"><span>Subtotal</span><span id="soli-sub">R$ 0,00</span></div>
-      <div class="row"><span>Taxa de Entrega (R$)</span><input id="soli-taxa" type="number" min="0" step="0.5" value="0" style="width:72px;text-align:right;padding:3px 6px" oninput="recalc()"></div>
-      <div class="row tot"><span>TOTAL</span><span id="soli-tot">R$ 0,00</span></div>
-    </div>
-
+    <h3>Novo agendamento de sala</h3>
     <div class="fr2">
-      <div class="fg"><label>Forma de Pagamento *</label><select id="soli-pag" onchange="toggleTroco()"><option value="pix">PIX</option><option value="cartao_credito">Cartão de Crédito</option><option value="cartao_debito">Cartão de Débito</option><option value="dinheiro">Dinheiro</option></select></div>
-      <div class="fg" id="wrap-troco" style="display:none"><label>Troco para (R$)</label><input id="soli-troco" type="number" min="0" step="1" placeholder="Ex: 100"></div>
+      <div class="fg"><label>Professor responsável *</label><select id="soli-prof"></select></div>
+      <div class="fg"><label>Sala *</label><select id="soli-sala"></select></div>
     </div>
-
-    <div class="fg"><label>Observações</label><textarea id="soli-obs" rows="2" placeholder="Cuidado ao manusear..."></textarea></div>
-
+    <div class="fr3">
+      <div class="fg"><label>Data *</label><input id="soli-data" type="date"></div>
+      <div class="fg"><label>Horário de início *</label><input id="soli-inicio" type="time"></div>
+      <div class="fg"><label>Horário de término *</label><input id="soli-fim" type="time"></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label>Finalidade *</label><input id="soli-finalidade" placeholder="Aula, reunião, apresentação..."></div>
+      <div class="fg"><label>Nº de participantes</label><input id="soli-participantes" type="number" min="1" value="1"></div>
+    </div>
+    <div class="fg"><label>Observações</label><textarea id="soli-obs" rows="3" placeholder="Informe equipamentos, organização da sala ou outras necessidades."></textarea></div>
+    <div class="total-box">
+      <div class="row"><span>Resumo</span><strong id="resumo-agendamento">Selecione a sala, data e horário</strong></div>
+    </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="fechar('m-solicitacao')">Cancelar</button>
-      <button class="btn btn-red"   onclick="salvarsolicitacao()">Confirmar solicitação</button>
+      <button class="btn btn-red" onclick="salvarsolicitacao()">Solicitar agendamento</button>
     </div>
-
   </div>
-
 </div>
 
-<!-- // ==================================  ATUALIZAR STATUS ============================= // -->
-
+<!-- STATUS -->
 <div id="m-status" class="modal-bg">
-
-  <div class="modal" style="max-width:330px">
-
-    <h3>Atualizar Status</h3>
+  <div class="modal" style="max-width:380px">
+    <h3>Atualizar agendamento</h3>
     <input type="hidden" id="st-id">
-
-    <div class="fg"><label>Novo Status</label>
-
+    <div class="fg"><label>Status</label>
       <select id="st-val">
-
-        <option value="recebido">📥 Recebido</option>
-        <option value="em_producao">⚙️ Em Produção</option>
-        <option value="saiu_entrega">🚚 Saiu para Entrega</option>
-        <option value="entregue">✅ Entregue</option>
+        <option value="pendente">🕐 Pendente</option>
+        <option value="aprovado">✅ Aprovado</option>
+        <option value="rejeitado">🚫 Rejeitado</option>
+        <option value="em_uso">🟢 Em uso</option>
+        <option value="concluido">✔️ Concluído</option>
         <option value="cancelado">❌ Cancelado</option>
-
       </select>
     </div>
-
     <div class="modal-foot">
-      <button class="btn btn-ghost" onclicck="fechar('m-status')">Cancelar</button>
-      <button class="btn btn-blue"  onclick="salvarStatus()">Atualizar</button>
+      <button class="btn btn-ghost" onclick="fechar('m-status')">Cancelar</button>
+      <button class="btn btn-blue" onclick="salvarStatus()">Atualizar status</button>
     </div>
-
   </div>
 </div>
 
-<!-- // ==================================  NOVO USUÁRIO ============================= // -->
+<!-- USUÁRIO -->
 <div id="m-usuario" class="modal-bg">
-
   <div class="modal">
-    <h3>Novo Usuário</h3>
-
+    <h3>Novo usuário</h3>
     <div class="fr2">
       <div class="fg"><label>Nome *</label><input id="u-nome" placeholder="Nome completo"></div>
-
-      <div class="fg"><label>Perfil</label><select id="u-perfil"><option value="Funcionário">Funcionário</option><option value="Entregador">Entregador</option><option value="coordenadoristrador">coordenadoristrador</option></select></div>
+      <div class="fg"><label>Perfil</label><select id="u-perfil"><option value="Professor">Professor</option><option value="Coordenador">Coordenador</option></select></div>
     </div>
-
     <div class="fg"><label>E-mail *</label><input id="u-email" type="email" placeholder="usuario@email.com"></div>
     <div class="fg"><label>Senha *</label><input id="u-senha" type="password" placeholder="Mínimo 6 caracteres"></div>
-
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="fechar('m-usuario')">Cancelar</button>
-      <button class="btn btn-blue" onclick="salvarUsuario()">Criar</button>
+      <button class="btn btn-blue" onclick="salvarUsuario()">Criar usuário</button>
     </div>
-
   </div>
-
-</div>
-
-<!-- // ==================================  solicitacao DE setor ============================= // -->
-<div id="m-solicitacao-setor" class="modal-bg">
-
-  <div class="modal lg">
-
-    <h3>solicitacao de setor</h3>
-
-    <div class="fr2">
-
-      <div class="fg"><label>setores *</label><select id="pm-setor"><option value="">— Selecione o setor —</option><option value="1">setor 1</option><option value="2">setor 2</option><option value="3">setor 3</option><option value="4">setor 4</option><option value="5">setor 5</option><option value="6">setor 6</option><option value="7">setor 7</option><option value="8">setor 8</option><option value="9">setor 9</option><option value="10">setor 10</option></select></div>
-      <div class="fg"><label>professor (opcional)</label><select id="pm-prof"><option value="">— Sem cadastro —</option></select></div>
-    </div>
-
-    <div class="div"></div>
-    
-   
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
-      <label style="margin-bottom:0;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">Itens do solicitacao</label>  
-      <button class="btn btn-ghost btn-sm" onclick="addItemsetor()">+ sala</button>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 68px 58px 68px 30px;gap:6px;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;padding:0 1px">
-      <span>sala</span><span>Tam.</span><span>Qtd</span><span>Subtotal</span><span></span> 
-    </div>
-
-    <div id="itens-setor-lista"></div>
-
-    <div class="total-box">
-      <div class="row"><span>Subtotal</span><span id="pm-sub">R$ 0,00</span></div>
-      <div class="row tot"><span>TOTAL DO SETOR</span><span id="pm-tot">R$ 0,00</span></div>  
-    </div>
-
-    <div class="fg"><label>Observações</label><textarea id="pm-obs" rows="2" placeholder="Manusear com cuidado..."></textarea></div>
-
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fechar('m-solicitacao-setor')">Cancelar</button>
-      <button class="btn btn-red"   onclick="salvarsolicitacoesetor()">Confirmar solicitacao</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- // ==================================  FECHAR setor ============================= // -->
-
-<div id="m-fechar-setor" class="modal-bg">
-
-  <div class="modal" style="max-width:440px">
-
-    <h3 id="fm-titulo">Fechar setor</h3>
-    <div id="fm-resumo" style="margin-bottom:12px"></div>
-
-    <div class="total-box"><div class="row"><span>Total de compra</span><span id="fm-total">R$ 0,00</span></div></div>
-
-    <div class="fg"><label>Forma de Pagamento</label><select id="fm-pag"><option value="pix">PIX</option><option value="cartao_credito">Cartão de Crédito</option><option value="cartao_debito">Cartão de Débito</option><option value="dinheiro">Dinheiro</option></select></div>
-
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fechar('m-fechar-setor')">Cancelar</button>
-      <button class="btn btn-green" onclick="confirmarFechamento()">✅ Fechar Setor</button>
-    </div>
-
-  </div>
-
 </div>
 
 <div id="toast"></div>
 <script src="script.js"></script>
-
 </body>
 </html>

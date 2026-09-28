@@ -1,150 +1,150 @@
-const { ready, query, run, get } = require('../database/sqlite'); // As variáveis constantes recebem os dados presentes no arquivo em requisição
+// Model de solicitações/reservas de salas.
+const { ready, query, run, get } = require('../database/sqlite');
 
-// Variável que seleciona (através dos comandos seguintes) o solicitacao
-const SELECT_solicitacao = `
+const SELECT = `
   SELECT
-    p.*,
-    c.nome     AS professor_nome,
-    c.telefone AS professor_telefone
-  FROM solicitacoes p
-  LEFT JOIN professores c ON c.id = p.professor_id
+    s.*,
+    p.nome AS professor_nome,
+    p.telefone AS professor_telefone,
+    r.nome AS sala_nome,
+    r.categoria AS sala_categoria,
+    r.capacidade AS sala_capacidade
+  FROM solicitacoes s
+  LEFT JOIN professores p ON p.id = s.professor_id
+  LEFT JOIN salas r ON r.id = s.sala_id
 `;
 
-// Funçõa que formatará o solicitacao
-function formatarsolicitacao(row, itens = []) { // Recebe row e um array com os itens selecionados
+function formatar(row) {
   if (!row) return null;
   return {
-    _id:           row.id,
-    id:            row.id,
-    numerosolicitacao:  row.numero_solicitacao,
+    _id: row.id,
+    id: row.id,
+    numeroSolicitacao: row.numero_solicitacao,
     professor: {
-      _id:      row.professor_id,
-      id:       row.professor_id,
-      nome:     row.professor_nome,
-      telefone: row.professor_telefone,
+      _id: row.professor_id,
+      id: row.professor_id,
+      nome: row.professor_nome,
+      telefone: row.professor_telefone
     },
-    itens: itens.map(it => ({
-      _id:           it.id,
-      sala:         it.sala_id,
-      nomesala:     it.nome_sala,
-      quantidade:    it.quantidade,
-      precoUnitario: it.preco_unitario,
-      subtotal:      it.subtotal,
-    })),
-    subtotal:       row.subtotal,
-    taxaEntrega:    row.taxa_entrega,
-    total:          row.total,
-    formaPagamento: row.forma_pagamento,
-    troco:          row.troco,
-    status:         row.status,
-    observacoes:    row.observacoes,
-    setor:           row.setor,
-    origem:         row.origem,
-    gestor:         row.gestor_id,
-    createdAt:      row.created_at,
-    updatedAt:      row.updated_at,
+    sala: {
+      id: row.sala_id,
+      nome: row.sala_nome,
+      categoria: row.sala_categoria,
+      capacidade: row.sala_capacidade
+    },
+    dataAgendamento: row.data_agendamento,
+    horarioInicio: row.horario_inicio,
+    horarioFim: row.horario_fim,
+    finalidade: row.finalidade,
+    participantes: row.participantes,
+    status: row.status,
+    observacoes: row.observacoes,
+    origem: row.origem,
+    gestor: row.gestor_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
   };
 }
 
-const solicitacao = { // Variável solicitacao recebe:
+const Solicitacao = {
+  async findAll({ gestorId, data, salaId } = {}) {
+    await ready;
+    const conditions = [];
+    const params = [];
+    if (gestorId) { conditions.push('s.gestor_id = ?'); params.push(gestorId); }
+    if (data) { conditions.push('s.data_agendamento = ?'); params.push(data); }
+    if (salaId) { conditions.push('s.sala_id = ?'); params.push(salaId); }
 
-  async findAll({ gestorId } = {}) { // De forma assíncrona procura tudo dentro de gestorId
-    await ready; // Espera estar pronto
-    let rows;
-    if (gestorId) { // Se for verdadeiro:
-      rows = query(`${SELECT_solicitacao} WHERE p.gestor_id = ? ORDER BY p.created_at DESC`, [gestorId]);
-    } else {
-      rows = query(`${SELECT_solicitacao} ORDER BY p.created_at DESC`);
-    }
-    return rows.map(row => {
-      const itens = query('SELECT * FROM itens_solicitacoes WHERE solicitacao_id = ?', [row.id]);
-      return formatarsolicitacao(row, itens);
-    });
+    const where = conditions.length ? ' WHERE ' + conditions.join(' AND ') : '';
+    return query(`${SELECT}${where} ORDER BY s.data_agendamento, s.horario_inicio`, params).map(formatar);
   },
 
-  async findById(id) { // De forma assíncrona procura um solicitacao por id
+  async findById(id) {
     await ready;
-    const row = get(`${SELECT_solicitacao} WHERE p.id = ?`, [id]);
-    if (!row) return null;
-    const itens = query('SELECT * FROM itens_solicitacoes WHERE solicitacao_id = ?', [id]);
-    return formatarsolicitacao(row, itens);
+    return formatar(get(`${SELECT} WHERE s.id = ?`, [id]));
   },
 
-  // De forma assíncrona cria um novo solicitacao
-  async create({ professorId, itens, taxaEntrega = 0, formaPagamento, troco = 0, observacoes = '', setor = null, origem = 'balcao', gestorId = null }) {
+  async verificarConflito({ salaId, dataAgendamento, horarioInicio, horarioFim, ignorarId = null }) {
+    await ready;
+    const params = [salaId, dataAgendamento, horarioFim, horarioInicio];
+    let sql = `
+      SELECT id FROM solicitacoes
+      WHERE sala_id = ?
+        AND data_agendamento = ?
+        AND status NOT IN ('cancelado', 'rejeitado')
+        AND horario_inicio < ?
+        AND horario_fim > ?
+    `;
+    if (ignorarId) {
+      sql += ' AND id <> ?';
+      params.push(ignorarId);
+    }
+    return !!get(sql, params);
+  },
+
+  async create({
+    professorId, salaId, dataAgendamento, horarioInicio, horarioFim,
+    finalidade = '', participantes = 1, observacoes = '', origem = 'sistema', gestorId = null
+  }) {
     await ready;
 
-    const Salas = require('./Salas');
-
-    for (const item of itens) {
-    const sala = await Salas.findById(item.sala);
-
-    if (!sala) {
-        throw new Error(`Sala ID ${item.sala} não encontrada`);
+    if (!professorId || !salaId || !dataAgendamento || !horarioInicio || !horarioFim) {
+      throw new Error('Professor, sala, data, horário inicial e horário final são obrigatórios');
+    }
+    if (horarioInicio >= horarioFim) {
+      throw new Error('O horário final deve ser depois do horário inicial');
     }
 
-    const tamanho = (item.tamanho || 'P').toUpperCase();
-    const precos = sala.precos || {};
+    const sala = get('SELECT * FROM salas WHERE id = ?', [salaId]);
+    if (!sala) throw new Error('Sala não encontrada');
+    if (!sala.disponivel) throw new Error('A sala está indisponível para agendamento');
 
-    const preco = typeof precos === 'object'
-        ? Number(precos[tamanho] ?? precos.P ?? precos.M ?? precos.G ?? 0)
-        : Number(precos || 0);
+    const professor = get('SELECT * FROM professores WHERE id = ? AND ativo = 1', [professorId]);
+    if (!professor) throw new Error('Professor não encontrado');
 
-    const subItem = preco * item.quantidade;
+    const qtd = Number(participantes) || 1;
+    if (sala.capacidade > 0 && qtd > sala.capacidade) {
+      throw new Error(`A sala comporta no máximo ${sala.capacidade} participantes`);
+    }
 
-    subtotal += subItem;
+    if (await this.verificarConflito({ salaId, dataAgendamento, horarioInicio, horarioFim })) {
+      throw new Error('Já existe um agendamento para essa sala nesse horário');
+    }
 
-    itensProcessados.push({
-        salaId: sala.id,
-        nomesala: sala.nome,
-        quantidade: item.quantidade,
-        tamanho,
-        precoUnitario: preco,
-        subtotal: subItem,
-    });
-}
+    const contagem = get('SELECT COALESCE(MAX(numero_solicitacao), 0) + 1 AS numero FROM solicitacoes');
+    const numero = contagem.numero;
 
-    const total        = subtotal + (taxaEntrega || 0);
-    const contagem     = get('SELECT COUNT(*) as total FROM solicitacoes');
-    const numerosolicitacao = (contagem?.total || 0) + 1;
-
-    const infosolicitacao = run(`
+    const info = run(`
       INSERT INTO solicitacoes
-        (numero_solicitacao, professor_id, subtotal, taxa_entrega, total,
-         forma_pagamento, troco, observacoes, setor, origem, gestor_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [numerosolicitacao, professorId, subtotal, taxaEntrega || 0, total,
-        formaPagamento, troco || 0, observacoes, setor, origem, gestorId]);
+        (numero_solicitacao, professor_id, sala_id, data_agendamento,
+         horario_inicio, horario_fim, finalidade, participantes, status,
+         observacoes, origem, gestor_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pendente', ?, ?, ?)
+    `, [
+      numero, professorId, salaId, dataAgendamento, horarioInicio, horarioFim,
+      finalidade, qtd, observacoes, origem, gestorId
+    ]);
 
-    const solicitacaoId = infosolicitacao.lastInsertRowid;
-
-    for (const it of itensProcessados) {
-      run(`
-        INSERT INTO itens_solicitacoes
-          (solicitacao_id, sala_id, nome_sala, quantidade, preco_unitario, subtotal)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `, [solicitacaoId, it.salaId, it.nomesala, it.quantidade, it.precoUnitario, it.subtotal]);
-    }
-
-    return this.findById(solicitacaoId);
+    return this.findById(info.lastInsertRowid);
   },
 
-  async updateStatus(id, status) { // De forma assíncrona atualiza o status do solicitacao por id
+  async updateStatus(id, status) {
     await ready;
+    const validos = ['pendente', 'aprovado', 'rejeitado', 'em_uso', 'concluido', 'cancelado'];
+    if (!validos.includes(status)) throw new Error('Status inválido');
+
     const info = run(
-      "UPDATE solicitacoes SET status = ?, update_at = datetime('now') WHERE id = ?",
+      "UPDATE solicitacoes SET status = ?, updated_at = datetime('now') WHERE id = ?",
       [status, id]
     );
     return info.changes > 0 ? this.findById(id) : null;
   },
 
-  async delete(id) { // De forma assíncrona deleta o solicitacao por id
+  async delete(id) {
     await ready;
-    // Deleta itens primeiro (sem CASCADE no sql.js)
-    run('DELETE FROM itens_solicitacoes WHERE solicitacao_id = ?', [id]);
     const info = run('DELETE FROM solicitacoes WHERE id = ?', [id]);
     return info.changes > 0;
-  },
+  }
 };
 
-module.exports = solicitacao; // Através de um módulo exporta a variável solicitacao
+module.exports = Solicitacao;

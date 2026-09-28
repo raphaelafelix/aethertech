@@ -46,7 +46,7 @@ const usuario = {
     return formatarUsuario(row);
   },
 
-  async create({ nome, email, senha, perfil = 'Atendente' }) { // De forma assíncrona cria um usuário
+  async create({ nome, email, senha, perfil = 'Professor' }) { // De forma assíncrona cria um usuário
     await ready;
     const hash = await bcrypt.hash(senha, 10);
     const info = run(

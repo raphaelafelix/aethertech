@@ -1,77 +1,74 @@
 require('dotenv').config();
-const { ready, run, query } = require('./src/database/sqlite');
+const { ready, run } = require('./src/database/sqlite');
 const bcrypt = require('bcryptjs');
 
 async function seed() {
+  try {
+    await ready;
+    console.log('Limpando dados de agendamento...');
+
+    run('DELETE FROM solicitacoes');
+    run('DELETE FROM salas');
+    run('DELETE FROM professores');
+    run('DELETE FROM usuarios');
+
     try {
-        await ready;
-        console.log('Limpando banco...');
+      run("DELETE FROM sqlite_sequence WHERE name IN ('solicitacoes','salas','professores','usuarios')");
+    } catch (_) {}
 
-        run('DELETE FROM solicitacoes');
-        run('DELETE FROM salas');
-        run('DELETE FROM professores');
-        run('DELETE FROM usuarios');
+    const hash = await bcrypt.hash('123456', 10);
 
-        try {
-            run("DELETE FROM sqlite_sequence WHERE name IN ('itens_solicitacoes','solicitacoes','salas','professores','usuarios')");
-        } catch(_) { }
+    run(
+      'INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
+      ['Coordenador', 'coord@email.com', hash, 'Coordenador']
+    );
+    run(
+      'INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
+      ['Professor', 'professor@email.com', hash, 'Professor']
+    );
 
-        console.log('Banco limpo');
+    const professores = [
+      ['Ana Souza', '(11) 99999-1111'],
+      ['Carlos Oliveira', '(11) 99999-2222'],
+      ['Mariana Santos', '(11) 99999-3333'],
+      ['Raphaela Felix', '(11) 99999-4444']
+    ];
 
-        const hash = await bcrypt.hash('123456', 10);
-
-        run('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
-            ['coordenador', 'coord@email.com', hash, 'coordenador']);
-        run('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
-            ['Funcionario', 'funcionario@email.com', hash, 'Funcionario']);
-        run('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
-            ['Gestor', 'gestor@email.com', hash, 'Gestor']);
-
-        console.log('3 usuario criadas');
-
-
-        const salas = [
-            ['Pistões e Virabrequim','Motor e Transmissão', {P:1500}],
-            ['Correia Dentada', 'Motor e Transmissão', {P:250}],
-            ['Embreagem e Câmbio', 'Motor e Transmissão', {P:400}],
-            ['Bomba d Água', 'Motor e Transmissão', {P:180}],
-            ['Válvula Termostática', 'Motor e Transmissão', {P:100}],
-            ['Radiador', 'Motor e Transmissão', {P:400}],
-            ['Amortecedores', 'Suspensão e Direção', {P:500}],
-            ['Molas', 'Suspensão e Direção', {P:300}],
-            ['Pivôs e Buchas', 'Suspensão e Direção', {P:300}],
-            ['Terminal de Direção', 'Suspensão e Direção', {P:80}],
-            ['Discos e Pastilhas', 'Freios', {P:350}],
-            ['Tambores e Sapatas', 'Freios', {P:300}],
-            ['Cilindro Mestre', 'Freios', {P:250}],
-            ['Velas de Ignição', 'Sistema Elétrico e Iluminação', {P:80}],
-            ['Bateria', 'Sistema Elétrico e Iluminação', {P:350}],
-            ['Alternador', 'Sistema Elétrico e Iluminação', {P:800}],
-            ['Motor de Partida', 'Sistema Elétrico e Iluminação', {P:450}],
-            ['Módulo de Injeção (ECU)', 'Sistema Elétrico e Iluminação', {P:1200}],
-            ['Para-choque Dianteiro', 'Carroceria e Acabamento', {P:400}],
-            ['Capô', 'Carroceria e Acabamento', {P:600}],
-            ['Portas', 'Carroceria e Acabamento', {P:800}],
-            ['Retrovisor Lateral', 'Carroceria e Acabamento', {P:200}],
-            ['Faróis', 'Carroceria e Acabamento', {P:500}],
-            ['Lanternas Traseiras', 'Carroceria e Acabamento', {P:300}],
-            ['Para-lama', 'Carroceria e Acabamento', {P:250}]
-        ];
-
-        for (const [nome, cat, precos] of salas) {
-            run('INSERT INTO salas (nome, categoria, precos) VALUES (?, ?, ?)',
-                [nome, cat, JSON.stringify(precos)]);
-        }
-        console.log('20 salas criadas')
-
-        console.log('======================================');
-        console.log('SEED EXECUTADO COM SUCESSO!');
-        console.log('======================================');
-        console.log('Login: coord@email.com | Senha: 123456');
-        console.log('======================================');
-    } catch (err) {
-        console.error('ERRO NO SEED:', err);
+    for (const [nome, telefone] of professores) {
+      run(
+        'INSERT INTO professores (nome, telefone) VALUES (?, ?)',
+        [nome, telefone]
+      );
     }
+
+    const salas = [
+      ['Sala de Informática 01', 'Laboratório', 30, 'Computadores, projetor, Wi-Fi', 'Bloco A - 1º andar'],
+      ['Sala de Informática 02', 'Laboratório', 30, 'Computadores, projetor, Wi-Fi', 'Bloco A - 1º andar'],
+      ['Sala de Reuniões', 'Reunião', 12, 'TV, câmera, Wi-Fi', 'Bloco A - térreo'],
+      ['Sala Multimídia', 'Multimídia', 40, 'Projetor, caixas de som, Wi-Fi', 'Bloco B - 1º andar'],
+      ['Laboratório de Eletrônica', 'Laboratório', 24, 'Bancadas, equipamentos técnicos, Wi-Fi', 'Bloco B - térreo'],
+      ['Auditório', 'Evento', 120, 'Projetor, som, microfones, ar-condicionado', 'Bloco C - térreo']
+    ];
+
+    for (const [nome, categoria, capacidade, recursos, localizacao] of salas) {
+      run(`
+        INSERT INTO salas (nome, categoria, capacidade, recursos, localizacao, disponivel)
+        VALUES (?, ?, ?, ?, ?, 1)
+      `, [nome, categoria, capacidade, recursos, localizacao]);
+    }
+
+    console.log('======================================');
+    console.log('SEED DE AGENDAMENTO EXECUTADO!');
+    console.log('======================================');
+    console.log('Login: coord@email.com | Senha: 123456');
+    console.log('======================================');
+  } catch (err) {
+    console.error('ERRO NO SEED:', err);
+    process.exitCode = 1;
+  }
 }
 
-seed();
+seed().catch((err) => {
+  console.error('ERRO FATAL NO SEED:', err);
+  process.exitCode = 1;
+});

@@ -53,24 +53,27 @@ router.get('/salas/:id', auth, async (req, res) => { // Rota que pesquisa salas 
 
 
 
-router.post('/salas', auth, async (req, res) => { // Rota para criação de uma nova sala
+router.post('/salas', auth, async (req, res) => { // Apenas Coordenador cria salas
     try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode criar salas' });
         if (!req.body.nome)
             return res.status(400).json({ erro: 'Nome é obrigatório' });
         res.status(201).json(await Salas.create(req.body));
     } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-router.put('/salas/:id', auth, async (req, res) => { //Rota que atualiza os dados de uma sala existente
+router.put('/salas/:id', auth, async (req, res) => { // Apenas Coordenador edita salas
     try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode editar salas' });
         const p = await Salas.update(req.params.id, req.body);
         if (!p) return res.status(404).json({ erro: 'Sala não encontrada' });
         res.json(p);
     } catch (e) { res.status(500).json({ erro: e.message }); } 
 });
 
-router.delete('/salas/:id', auth, async (req, res) => { // Rota que deleta uma sala existente
+router.delete('/salas/:id', auth, async (req, res) => { // Apenas Coordenador exclui salas
     try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode excluir salas' });
         const ok = await Salas.delete(req.params.id);
         if (!ok) return res.status(404).json({ erro: 'Sala não encontrada'});
         res.json({ mensagem: 'sala deletada'});
@@ -90,84 +93,110 @@ router.get('/professores/:id', auth, async (req, res) => { // Rota que pesquisa 
     } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-router.post('/professores', auth, async (req, res) => { // Rota para a criação de um professor, com um try para captar erros
+router.post('/professores', auth, async (req, res) => { // Apenas Coordenador cria professores
     try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode criar professores' });
         if (!req.body.nome || !req.body.telefone)
             return res.status(400).json({ erro: 'Nome e telefone são obrigatórios'});
         res.status(201).json(await professor.create(req.body));
     } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-router.put('/professores/:id', auth, async (req, res) => { // Rota que atualiza um professor existente
+router.put('/professores/:id', auth, async (req, res) => { // Apenas Coordenador edita professores
     try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode editar professores' });
         const c = await professor.update(req.params.id, req.body);
         if (!c) return res.status(404).json({ erro: 'Professor não encontrado' });
         res.json(c);
     } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-router.delete('/professores/:id', auth, async (req, res) => { // Rota que deleta um professor já existente
+router.delete('/professores/:id', auth, async (req, res) => { // Apenas Coordenador exclui professores
     try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode excluir professores' });
         const ok = await professor.delete(req.params.id);
         if (!ok) return res.status(404).json({ erro: 'Professor não encontrado' });
         res.json({ mensagem: 'Professor deletado' });
     } catch (e) { res.status(500).json({erro: e.message}); }
 });
 
-router.get('/solicitacoes', auth, async (req, res) => { // Rota que coleta e mostra todos os solicitacoes
+router.get('/solicitacoes', auth, async (req, res) => {
     try {
         const filtros = {};
         if (req.query.gestor) filtros.gestorId = req.query.gestor;
+        if (req.query.data) filtros.data = req.query.data;
+        if (req.query.sala) filtros.salaId = req.query.sala;
         res.json(await solicitacao.findAll(filtros));
-    } catch (e) { res.status(500).json({ erro: e.message }); }
+    } catch (e) {
+        res.status(500).json({ erro: e.message });
+    }
 });
 
-router.get('/solicitacoes/:id', auth, async (req, res) => { // Rota que pesquisa solicitacoes pelo id, com um try para captar erros
+router.get('/solicitacoes/:id', auth, async (req, res) => {
     try {
-        const p = await solicitacao.findById(req.params.id);
-        if (!p) return res.status(404).json({ erro: 'Solicitação não encontrada' });
-        res.json(p);
-    } catch (e) { res.status(500).json({ erro: e.message}); }
+        const reserva = await solicitacao.findById(req.params.id);
+        if (!reserva) return res.status(404).json({ erro: 'Agendamento não encontrado' });
+        res.json(reserva);
+    } catch (e) {
+        res.status(500).json({ erro: e.message });
+    }
 });
 
-router.post('/solicitacoes', auth, async (req, res) => { // Rota para criação de um novo solicitacao, com um try para captar erros
+router.post('/solicitacoes', auth, async (req, res) => {
     try {
-        const {professor, itens, formaPagamento } = req.body;
-        if (!professor || !itens?.length || !formaPagamento)
-            return res.status(400).json({ erro: 'professor, itens e formaPagamento são obrigatórios'});
+        if (!['Coordenador', 'Professor'].includes(req.usuario.perfil)) {
+            return res.status(403).json({ erro: 'Apenas Coordenador ou Professor pode criar agendamentos' });
+        }
+        const {
+            professor, sala, dataAgendamento, horarioInicio, horarioFim,
+            finalidade, participantes, observacoes
+        } = req.body;
+
+        if (!professor || !sala || !dataAgendamento || !horarioInicio || !horarioFim) {
+            return res.status(400).json({
+                erro: 'Professor, sala, data, horário inicial e horário final são obrigatórios'
+            });
+        }
 
         const novo = await solicitacao.create({
             professorId: professor,
-            itens,
-            taxaEntrega:    req.body.taxaEntrega,
-            formaPagamento,
-            troco:          req.body.troco,
-            observacoes:    req.body.observacoes,
-            setor:          req.body.setor,
-            origem:         req.body.origem,
-            gestorId:       req.body.gestor || req.usuario?.id,
+            salaId: sala,
+            dataAgendamento,
+            horarioInicio,
+            horarioFim,
+            finalidade,
+            participantes,
+            observacoes,
+            origem: 'sistema',
+            gestorId: req.usuario?.id || null
         });
+
         res.status(201).json(novo);
-    } catch (e) { res.status(400).json({ erro: e.message}); }
+    } catch (e) {
+        res.status(400).json({ erro: e.message });
+    }
 });
 
-router.patch('/solicitacoes/:id/status', auth, async (req,res) => { // Rota que altera o status do solicitacao, com um try para a coleta de erros
-    try{
-        const validos = ['recebido','em_producao','saiu_entrega','entregue','cancelado'];
-        if (!validos.includes(req.body.status))
-            return res.status(400).json({ erro: 'Status inválido'});
-        const p = await solicitacao.updateStatus(req.params.id, req.body.status);
-        if (!p) return res.status(404).json({ erro: 'Solicitação não encontrada' });
-        res.json(p);
-    } catch (e) { res.status(500).json({ erro: e.message}); }
-});
-
-router.delete('/solicitacoes/:id', auth, async (req, res) => { // Rota que deletea um professor existente
+router.patch('/solicitacoes/:id/status', auth, async (req, res) => {
     try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode alterar o status do agendamento' });
+        const p = await solicitacao.updateStatus(req.params.id, req.body.status);
+        if (!p) return res.status(404).json({ erro: 'Agendamento não encontrado' });
+        res.json(p);
+    } catch (e) {
+        res.status(400).json({ erro: e.message });
+    }
+});
+
+router.delete('/solicitacoes/:id', auth, async (req, res) => {
+    try {
+        if (req.usuario.perfil !== 'Coordenador') return res.status(403).json({ erro: 'Apenas o Coordenador pode excluir agendamentos' });
         const ok = await solicitacao.delete(req.params.id);
-        if (!ok) return res.status(404).json({ erro: 'Solicitação não encontrada'});
-        res.json({ mensagem: 'Solicitação deletada'})
-    } catch (e) { res.status(500).json({ erro: e.message});}
+        if (!ok) return res.status(404).json({ erro: 'Agendamento não encontrado' });
+        res.json({ mensagem: 'Agendamento excluído' });
+    } catch (e) {
+        res.status(500).json({ erro: e.message });
+    }
 });
 
 router.get('/usuarios', auth, async (req, res) => { // Rota que coleta e mostra todos os usuários (acesso apenas para administradores)
@@ -182,7 +211,9 @@ router.post('/usuarios', auth, async (req, res) => {
     try {
         if (req.usuario.perfil !== 'Coordenador')
             return res.status(403).json({ erro: 'Acesso restrito a Coordenadores'});
-        const { nome, email, senha, perfil } = req.body;
+        const { nome, email, senha, perfil = 'Professor' } = req.body;
+        if (!['Coordenador', 'Professor'].includes(perfil))
+            return res.status(400).json({ erro: 'Perfil inválido. Use Coordenador ou Professor' });
         if(!nome || !email || !senha)
             return res.status(400).json({ erro: 'Nome, email e senha são obrigatórios'});
         res.status(201).json(await Usuario.create({nome, email, senha, perfil}));
