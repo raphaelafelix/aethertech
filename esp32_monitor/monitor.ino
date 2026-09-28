@@ -8,14 +8,14 @@
 // =============================
 // CONFIGURAÇÃO DO PROJETO
 // =============================
-const char* WIFI_SSID = "rapha";
+const char* WIFI_SSID = "raphaela";
 const char* WIFI_PASSWORD = "paodequeijo";
 
 // IP do computador onde o Node.js está rodando.
 // NÃO use localhost ou 127.0.0.1 aqui.
 const char* SERVER_HOST = "192.168.56.1";
 const uint16_t SERVER_PORT = 3001;
-const char* MONITOR_KEY = "MONITOR_SENAI_2026";
+const char* MONITOR_KEY = "1273871";
 
 // ID da sala que este monitor acompanha.
 // Ex.: 1 = Sala de Informática 01.
@@ -182,7 +182,7 @@ void consultarAPI() {
 }
 
 void setup() {
-  Serial.begin(19200);
+  Serial.begin(115200);
 
   SPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, TFT_CS);
   tft.begin();
@@ -195,7 +195,7 @@ void setup() {
   int tentativas = 0;
   while (WiFi.status() != WL_CONNECTED && tentativas < 30) {
     delay(500);
-    Serial.print("tentando conectar...");
+    Serial.print(".");
     tentativas++;
   }
 
