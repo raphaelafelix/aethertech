@@ -10,11 +10,70 @@ const Salas = require('../models/Salas');
 const professor = require('../models/Professor');
 const solicitacao = require('../models/Solicitacao');
 
+// =============================
+// MONITOR API (ESP32 - Sem autenticação JWT)
+// =============================
+router.get('/monitor/salas', async (req, res) => {
+    try {
+        const monitorKey = process.env.MONITOR_API_KEY;
+        const headerKey = req.headers['x-monitor-key'];
+
+        if (!monitorKey || headerKey !== monitorKey) {
+            return res.status(401).json({ erro: 'Chave do monitor inválida' });
+        }
+
+        const salas = await Salas.findAll();
+        const hoje = new Date().toISOString().split('T')[0];
+        const agora = new Date().toLocaleTimeString('pt-BR', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+        const salasComAgendamento = await Promise.all(salas.map(async (sala) => {
+            const agendamentos = await solicitacao.findAll({ salaId: sala.id });
+            
+            let atual = null;
+            let proximo = null;
+
+            const agendamentosHoje = agendamentos.filter(
+                ag => ag.dataAgendamento === hoje && ag.status === 'aprovado'
+            );
+
+            agendamentosHoje.forEach(ag => {
+                if (ag.horarioInicio <= agora && ag.horarioFim > agora) {
+                    atual = ag;
+                } else if (ag.horarioInicio > agora && !proximo) {
+                    proximo = ag;
+                }
+            });
+
+            return {
+                id: sala.id,
+                nome: sala.nome,
+                status: sala.disponivel ? (atual ? 'ocupada' : 'livre') : 'indisponivel',
+                atual: atual ? {
+                    horarioInicio: atual.horarioInicio,
+                    horarioFim: atual.horarioFim,
+                    professor: atual.professor?.nome || 'N/A',
+                    finalidade: atual.finalidade || 'Sem finalidade'
+                } : null,
+                proximo: proximo ? {
+                    horarioInicio: proximo.horarioInicio,
+                    horarioFim: proximo.horarioFim,
+                    professor: proximo.professor?.nome || 'N/A',
+                    finalidade: proximo.finalidade || 'Sem finalidade'
+                } : null
+            };
+        }));
+
+        res.json({ salas: salasComAgendamento });
+    } catch (e) {
+        res.status(500).json({ erro: e.message });
+    }
+});
+
 // Adquire de forma assíncrona 
 router.post('/auth/login', async (req, res) => {
     try { // Tentativa
         const { email, senha } = req.body; // Recebe a requisição do body
-        if (!email || !senha) return res.status(400).json({ erro: 'E-mail e senha são obrigatórios'}); // Se o email e a senha forem falsos, há o retorno de um status e um json informando a situação
+        if (!email || !senha) return res.status(400).json({ erro: 'E-mail e senha são obrigatórios'}); // Se o email e a senha forem falsos, há o retorno de um status e um json informando a sit[...]
 
         const usuario = await Usuario.findByEmail(email); // A variável vai esperar com que o usuário seja achado por email
         if (!usuario) return res.status(401).json({ erro: 'Credenciais inválidas'}); // Se o usuário for falso, há o retorno de um status e um json informando a situação
@@ -44,7 +103,6 @@ router.get('/salas/:id', auth, async (req, res) => { // Rota que pesquisa salas 
         res.json(p);
     } catch (e) { res.status(500).json({ erro: e.message }); }
 });
-
 
 
 
