@@ -28,9 +28,9 @@ async function seed() {
     );
 
     const professores = [
-      ['Ana Souza', '(11) 99999-1111'],
-      ['Carlos Oliveira', '(11) 99999-2222'],
-      ['Mariana Santos', '(11) 99999-3333'],
+      ['Mariana Ayoub', '(11) 99999-1111'],
+      ['Henrique Duarte', '(11) 99999-2222'],
+      ['Yasmin Lopes', '(11) 99999-3333'],
       ['Raphaela Felix', '(11) 99999-4444']
     ];
 

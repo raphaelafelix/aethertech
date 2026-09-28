@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>👾 AetherTech · Agendamento de Salas</title>
+  <title>SENAI · Agendamento de Salas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -11,11 +11,12 @@
 <body>
 
 <div id="tela-login">
+  <div class="login-overlay"></div>
   <div class="login-box">
     <div class="login-logo">
-      <span class="em">👾</span>
-      <h1>AetherTech</h1>
-      <p>Agendamento de Salas · Entre para continuar</p>
+      <img src="/images/senai-logo.png" alt="SENAI">
+      <h1>Portal do Professor</h1>
+      <p>Agendamento de salas</p>
     </div>
     <div class="login-erro" id="login-erro"></div>
     <div class="fg">
@@ -27,39 +28,28 @@
       <input id="l-senha" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter') fazerLogin()">
     </div>
     <button class="btn btn-red" id="btn-login" style="width:100%;padding:10px" onclick="fazerLogin()">Entrar</button>
-    <p style="text-align:center;font-size:.69rem;color:var(--muted);margin-top:14px">
-      Login inicial: <strong style="color:var(--text)">coord@email.com</strong> · senha <strong style="color:var(--text)">123456</strong>
-    </p>
+    <p class="login-help">Acesse com seu CPF e senha cadastrados.</p>
   </div>
 </div>
 
 <div id="app">
   <aside id="sidebar">
     <div class="sb-logo">
-      <h1>👾 AetherTech</h1>
-      <div class="sb-user">
-        <span class="tag" id="sb-perfil">—</span>
-        <span id="sb-nome">—</span>
-      </div>
+      <img src="/images/senai-logo.png" alt="SENAI">
     </div>
-
     <nav class="sb-nav">
-      <div class="sb-group">Geral</div>
-      <button class="nav-btn ativo" onclick="ir('calendario',this)"><span class="ic">🗓️</span><span>Calendário</span></button>
-      <button class="nav-btn" onclick="ir('solicitacoes',this)"><span class="ic">📋</span><span>Agendamentos</span></button>
-
-      <div class="sb-group">Cadastros</div>
-      <button class="nav-btn" onclick="ir('salas',this)"><span class="ic">🏫</span><span>Salas</span></button>
-      <button class="nav-btn" onclick="ir('professores',this)"><span class="ic">👥</span><span>Professores</span></button>
-
-      <div class="sb-group" id="menu-usuarios" style="display:none">Sistema</div>
-      <button class="nav-btn" id="btn-usuarios" onclick="ir('usuarios',this)" style="display:none"><span class="ic">🔐</span><span>Usuários</span></button>
+      <button class="nav-btn ativo" onclick="ir('calendario',this)"><span>VER AGENDA</span></button>
+      <button class="nav-btn" onclick="ir('solicitacoes',this)"><span>RESERVAR SALA</span></button>
+      <button class="nav-btn" onclick="ir('salas',this)"><span>SALAS</span></button>
+      <button class="nav-btn" onclick="ir('professores',this)"><span>PROFESSORES</span></button>
+      <button class="nav-btn admin-nav" id="btn-usuarios" onclick="ir('usuarios',this)" style="display:none"><span>USUÁRIOS</span></button>
     </nav>
-
-    <div class="sb-footer">
-      <span>v3.0 · Salas</span>
+    <div class="sb-user">
+      <span id="sb-nome">—</span>
+      <span class="tag" id="sb-perfil">—</span>
       <button class="btn-logout" onclick="sair()">Sair</button>
     </div>
+    <div id="menu-usuarios" style="display:none"></div>
   </aside>
 
   <div id="conteudo">
@@ -69,6 +59,15 @@
         <button class="btn btn-ghost btn-sm" onclick="carregarTudo()">↻ Atualizar</button>
       </div>
       <div class="pg-body">
+        <div class="portal-hero">
+          <img src="./images/image 1.png" alt="Unidade SENAI">
+          <div class="hero-copy">
+            <span class="hero-kicker">SENAI GUARULHOS</span>
+            <h3>Portal do Professor</h3>
+            <p>Consulte a agenda e reserve uma sala de forma rápida e organizada.</p>
+            <button class="btn btn-red" onclick="abrirsolicitacao()">Reservar sala</button>
+          </div>
+        </div>
         <div class="stats-grid">
           <div class="stat cr"><span class="ico">📅</span><div class="lbl">Agendamentos</div><div class="val" id="s-soli">—</div><div class="sub" id="s-soli-sub">cadastrados</div></div>
           <div class="stat cg"><span class="ico">👥</span><div class="lbl">Professores</div><div class="val" id="s-prof">—</div><div class="sub">cadastrados</div></div>
@@ -134,6 +133,10 @@
     </section>
   </div>
 </div>
+<footer class="site-footer">
+  <div><strong>SENAI Guarulhos - “Hermenegildo Campos de Almeida”</strong><span>Av. Dr. Renato de Andrade Maia, 601 · Jardim Paraventi · Guarulhos/SP</span></div>
+  <div><strong>Central de Relacionamento</strong><span>(11) 4210-4455 · 0800-055-1000</span></div>
+</footer>
 
 <!-- SALA -->
 <div id="m-sala" class="modal-bg">
