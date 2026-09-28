@@ -16,16 +16,6 @@ function R$(v) {
   return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
 }
 
-function badge(s) {
-  const r = {
-    recebido:     '📥 Recebido',
-    em_producao:  '⚙️ Fabricando',
-    saiu_entrega: '🚚 Saiu p/ Entrega',
-    entregue:     '✅ Entregue',
-    cancelado:    '❌ Cancelado',
-  };
-  return `<span class="badge b-${s}">${r[s] || s}</span>`;
-}
 
 function toast(msg, tipo = 'ok') {
   const el = document.getElementById('toast');
@@ -146,7 +136,7 @@ function aplicarPerfil(usuario) {
   showEl(document.querySelector('.sb-group'),              true, 'block');
 
   show('btn-nova-sala', true, 'inline-flex');
-  show('stat-fat',      true, 'block');
+  
   show('stat-prof',      true, 'block');
 
   ir('calendario', document.querySelector('[onclick*="calendario"]'));
@@ -196,10 +186,7 @@ async function carregarcalendario() {
     document.getElementById('s-piz').textContent = salas.length;
     document.getElementById('s-prof').textContent = professores.length;
     document.getElementById('s-soli').textContent = solicitacoes.length;
-    document.getElementById('s-ent').textContent =
-      solicitacoes.filter(p => p.status === 'saiu_entrega').length;
-    document.getElementById('s-fat').textContent =
-      R$(solicitacoes.reduce((acc, p) => acc + (p.total || 0), 0));
+    
 
     const pend = solicitacoes.filter(p => !['entregue','cancelado'].includes(p.status)).length;
     document.getElementById('s-soli-sub').textContent = `${pend} pendente(s)`;
