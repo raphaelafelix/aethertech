@@ -28,6 +28,7 @@ async function seed() {
     );
 
     const professores = [
+      ['Eduardo Fallabela', ''],
       ['Mariana Ayoub', '(11) 99999-1111'],
       ['Henrique Duarte', '(11) 99999-2222'],
       ['Yasmin Lopes', '(11) 99999-3333'],
