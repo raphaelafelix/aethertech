@@ -5,20 +5,20 @@
 #include <TFT_eSPI.h>
 
 // =====================================================
-// WI-FI DO PRÓPRIO MONITOR
+// WI-FI
 // =====================================================
 
-const char* AP_SSID = "SENAI-MONITOR";
-const char* AP_PASSWORD = "senai123";
+const char* WIFI_SSID = "rapha";
+const char* WIFI_PASSWORD = "valarmorghulis";
 
-// IP do computador que estará rodando o servidor Node.js
-const char* SERVER_HOST = "192.168.4.2";
+// IP DO COMPUTADOR NA ETHERNET
+const char* SERVER_HOST = "10.106.208.21";
+
 const uint16_t SERVER_PORT = 3001;
 
-// Chave usada pela API
 const char* MONITOR_KEY = "1273871";
 
-// ID da sala que este monitor representa
+// ID da sala exibida neste monitor
 const int ROOM_ID = 1;
 
 // =====================================================
@@ -32,26 +32,34 @@ TFT_eSPI tft = TFT_eSPI();
 // =====================================================
 
 unsigned long ultimaConsulta = 0;
+
 const unsigned long INTERVALO = 10000;
 
 // =====================================================
 // CENTRALIZAR TEXTO
 // =====================================================
 
-void centralizarTexto(const String &texto, int y, int tamanho)
+void centralizarTexto(
+    const String &texto,
+    int y,
+    int tamanho
+)
 {
     tft.setTextSize(tamanho);
 
-    // TFT_eSPI não usa getTextBounds() dessa forma.
-    // Vamos calcular uma posição aproximada.
-    int larguraAproximada = texto.length() * 6 * tamanho;
+    int larguraAproximada =
+        texto.length() * 6 * tamanho;
 
-    int x = (tft.width() - larguraAproximada) / 2;
+    int x =
+        (tft.width() - larguraAproximada) / 2;
 
     if (x < 0)
+    {
         x = 0;
+    }
 
     tft.setCursor(x, y);
+
     tft.print(texto);
 }
 
@@ -64,9 +72,11 @@ void telaBase()
     tft.fillScreen(TFT_WHITE);
 
     tft.setTextColor(TFT_BLACK);
+
     tft.setTextSize(2);
 
     tft.setCursor(12, 10);
+
     tft.print("SENAI | AGENDAMENTO");
 
     tft.drawFastHLine(
@@ -104,7 +114,9 @@ void mostrarConectando()
 // TELA DE ERRO
 // =====================================================
 
-void mostrarErro(const String &mensagem)
+void mostrarErro(
+    const String &mensagem
+)
 {
     telaBase();
 
@@ -126,7 +138,7 @@ void mostrarErro(const String &mensagem)
 
     tft.setTextSize(1);
 
-    tft.setCursor(30, 185);
+    tft.setCursor(20, 185);
 
     tft.print(
         "Verifique Wi-Fi e servidor"
@@ -137,22 +149,32 @@ void mostrarErro(const String &mensagem)
 // MOSTRAR SALA
 // =====================================================
 
-void mostrarSala(JsonObject sala)
+void mostrarSala(
+    JsonObject sala
+)
 {
     telaBase();
 
-    String nome = sala["nome"] | "Sala";
-    String status = sala["status"] | "livre";
+    String nome =
+        sala["nome"] | "Sala";
 
-    // Nome da sala
+    String status =
+        sala["status"] | "livre";
+
+    // =================================================
+    // NOME
+    // =================================================
+
     tft.setTextColor(TFT_BLACK);
+
     tft.setTextSize(2);
 
     tft.setCursor(12, 52);
+
     tft.print(nome);
 
     // =================================================
-    // STATUS
+    // SALA OCUPADA
     // =================================================
 
     if (status == "ocupada")
@@ -166,7 +188,9 @@ void mostrarSala(JsonObject sala)
             TFT_RED
         );
 
-        tft.setTextColor(TFT_WHITE);
+        tft.setTextColor(
+            TFT_WHITE
+        );
 
         centralizarTexto(
             "OCUPADA",
@@ -175,7 +199,13 @@ void mostrarSala(JsonObject sala)
         );
     }
 
-    else if (status == "indisponivel")
+    // =================================================
+    // SALA INDISPONÍVEL
+    // =================================================
+
+    else if (
+        status == "indisponivel"
+    )
     {
         tft.fillRoundRect(
             25,
@@ -186,7 +216,9 @@ void mostrarSala(JsonObject sala)
             TFT_DARKGREY
         );
 
-        tft.setTextColor(TFT_WHITE);
+        tft.setTextColor(
+            TFT_WHITE
+        );
 
         centralizarTexto(
             "INDISPONIVEL",
@@ -194,6 +226,10 @@ void mostrarSala(JsonObject sala)
             2
         );
     }
+
+    // =================================================
+    // SALA LIVRE
+    // =================================================
 
     else
     {
@@ -206,7 +242,9 @@ void mostrarSala(JsonObject sala)
             TFT_GREEN
         );
 
-        tft.setTextColor(TFT_BLACK);
+        tft.setTextColor(
+            TFT_BLACK
+        );
 
         centralizarTexto(
             "LIVRE",
@@ -219,7 +257,10 @@ void mostrarSala(JsonObject sala)
     // INFORMAÇÕES DO AGENDAMENTO
     // =================================================
 
-    tft.setTextColor(TFT_BLACK);
+    tft.setTextColor(
+        TFT_BLACK
+    );
+
     tft.setTextSize(1);
 
     JsonObject atual =
@@ -228,9 +269,9 @@ void mostrarSala(JsonObject sala)
     JsonObject proximo =
         sala["proximo"].as<JsonObject>();
 
-    // -------------------------------------------------
-    // SALA OCUPADA
-    // -------------------------------------------------
+    // =================================================
+    // AGENDAMENTO ATUAL
+    // =================================================
 
     if (!atual.isNull())
     {
@@ -246,25 +287,43 @@ void mostrarSala(JsonObject sala)
         const char* finalidade =
             atual["finalidade"] | "";
 
-        tft.setCursor(15, 170);
+        tft.setCursor(
+            15,
+            170
+        );
 
         tft.print(inicio);
+
         tft.print(" - ");
+
         tft.print(fim);
 
-        tft.setCursor(15, 188);
+        tft.setCursor(
+            15,
+            188
+        );
 
-        tft.print("Professor: ");
-        tft.print(professor);
+        tft.print(
+            "Professor: "
+        );
 
-        tft.setCursor(15, 206);
+        tft.print(
+            professor
+        );
 
-        tft.print(finalidade);
+        tft.setCursor(
+            15,
+            206
+        );
+
+        tft.print(
+            finalidade
+        );
     }
 
-    // -------------------------------------------------
+    // =================================================
     // PRÓXIMO AGENDAMENTO
-    // -------------------------------------------------
+    // =================================================
 
     else if (!proximo.isNull())
     {
@@ -280,31 +339,60 @@ void mostrarSala(JsonObject sala)
         const char* finalidade =
             proximo["finalidade"] | "";
 
-        tft.setCursor(15, 170);
+        tft.setCursor(
+            15,
+            170
+        );
 
-        tft.print("Proximo: ");
+        tft.print(
+            "Proximo: "
+        );
 
-        tft.print(inicio);
-        tft.print(" - ");
-        tft.print(fim);
+        tft.print(
+            inicio
+        );
 
-        tft.setCursor(15, 188);
+        tft.print(
+            " - "
+        );
 
-        tft.print("Professor: ");
-        tft.print(professor);
+        tft.print(
+            fim
+        );
 
-        tft.setCursor(15, 206);
+        tft.setCursor(
+            15,
+            188
+        );
 
-        tft.print(finalidade);
+        tft.print(
+            "Professor: "
+        );
+
+        tft.print(
+            professor
+        );
+
+        tft.setCursor(
+            15,
+            206
+        );
+
+        tft.print(
+            finalidade
+        );
     }
 
-    // -------------------------------------------------
+    // =================================================
     // SEM AGENDAMENTO
-    // -------------------------------------------------
+    // =================================================
 
     else
     {
-        tft.setCursor(15, 180);
+        tft.setCursor(
+            15,
+            180
+        );
 
         tft.print(
             "Nenhum agendamento proximo."
@@ -315,7 +403,10 @@ void mostrarSala(JsonObject sala)
     // ATUALIZAÇÃO
     // =================================================
 
-    tft.setCursor(15, 228);
+    tft.setCursor(
+        15,
+        228
+    );
 
     tft.print(
         "Atualizacao automatica: 10s"
@@ -328,16 +419,29 @@ void mostrarSala(JsonObject sala)
 
 void consultarAPI()
 {
-    // Verifica se o ESP32 está conectado ao
-    // próprio Wi-Fi
-    if (WiFi.status() != WL_CONNECTED)
+    // =================================================
+    // VERIFICAR WI-FI
+    // =================================================
+
+    if (
+        WiFi.status() != WL_CONNECTED
+    )
     {
-        mostrarErro(
-            "Wi-Fi desconectado"
+        mostrarConectando();
+
+        WiFi.disconnect();
+
+        WiFi.begin(
+            WIFI_SSID,
+            WIFI_PASSWORD
         );
 
         return;
     }
+
+    // =================================================
+    // CRIAR CLIENTE HTTP
+    // =================================================
 
     HTTPClient http;
 
@@ -348,13 +452,21 @@ void consultarAPI()
         SERVER_PORT +
         "/api/monitor/salas";
 
+    Serial.println();
+
     Serial.println(
-        "Consultando API:"
+        "Consultando servidor:"
     );
 
-    Serial.println(url);
+    Serial.println(
+        url
+    );
 
     http.begin(url);
+
+    // =================================================
+    // CHAVE DA API
+    // =================================================
 
     http.addHeader(
         "X-Monitor-Key",
@@ -363,22 +475,32 @@ void consultarAPI()
 
     http.setTimeout(5000);
 
-    int code = http.GET();
+    // =================================================
+    // GET
+    // =================================================
+
+    int code =
+        http.GET();
 
     Serial.print(
         "HTTP: "
     );
 
-    Serial.println(code);
+    Serial.println(
+        code
+    );
 
     // =================================================
-    // ERRO HTTP
+    // ERRO
     // =================================================
 
-    if (code != HTTP_CODE_OK)
+    if (
+        code != HTTP_CODE_OK
+    )
     {
         mostrarErro(
-            "HTTP " + String(code)
+            "HTTP " +
+            String(code)
         );
 
         http.end();
@@ -387,7 +509,7 @@ void consultarAPI()
     }
 
     // =================================================
-    // RECEBER JSON
+    // RECEBER RESPOSTA
     // =================================================
 
     String payload =
@@ -399,10 +521,12 @@ void consultarAPI()
         "Resposta:"
     );
 
-    Serial.println(payload);
+    Serial.println(
+        payload
+    );
 
     // =================================================
-    // INTERPRETAR JSON
+    // CONVERTER JSON
     // =================================================
 
     JsonDocument doc;
@@ -415,23 +539,23 @@ void consultarAPI()
 
     if (erro)
     {
-        mostrarErro(
-            "JSON invalido"
-        );
-
         Serial.println(
-            "Erro JSON:"
+            "Erro ao interpretar JSON:"
         );
 
         Serial.println(
             erro.c_str()
         );
 
+        mostrarErro(
+            "JSON invalido"
+        );
+
         return;
     }
 
     // =================================================
-    // PEGAR SALAS
+    // PEGAR ARRAY DE SALAS
     // =================================================
 
     JsonArray salas =
@@ -439,7 +563,13 @@ void consultarAPI()
 
     JsonObject encontrada;
 
-    for (JsonObject sala : salas)
+    // =================================================
+    // PROCURAR SALA
+    // =================================================
+
+    for (
+        JsonObject sala : salas
+    )
     {
         if (
             (int)sala["id"] ==
@@ -456,7 +586,9 @@ void consultarAPI()
     // SALA NÃO ENCONTRADA
     // =================================================
 
-    if (encontrada.isNull())
+    if (
+        encontrada.isNull()
+    )
     {
         mostrarErro(
             "Sala nao encontrada"
@@ -480,11 +612,14 @@ void consultarAPI()
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(
+        115200
+    );
 
     delay(500);
 
     Serial.println();
+
     Serial.println(
         "================================"
     );
@@ -498,109 +633,95 @@ void setup()
     );
 
     // =================================================
-    // TELA
+    // INICIALIZAR TELA
     // =================================================
 
     tft.init();
 
-    // Essa foi a rotação que funcionou
-    // no seu CYD
+    // Rotação que funcionou no seu CYD
     tft.setRotation(3);
 
     mostrarConectando();
 
     // =================================================
-    // CRIAR WI-FI DO ESP32
+    // WI-FI
     // =================================================
 
-    WiFi.mode(WIFI_AP);
+    WiFi.mode(
+        WIFI_STA
+    );
 
-    bool resultado =
-        WiFi.softAP(
-            AP_SSID,
-            AP_PASSWORD
-        );
+    WiFi.begin(
+        WIFI_SSID,
+        WIFI_PASSWORD
+    );
 
-    if (!resultado)
+    Serial.print(
+        "Conectando ao Wi-Fi"
+    );
+
+    int tentativas = 0;
+
+    while (
+        WiFi.status() != WL_CONNECTED &&
+        tentativas < 30
+    )
     {
-        mostrarErro(
-            "Falha ao criar Wi-Fi"
-        );
+        delay(500);
 
-        Serial.println(
-            "ERRO ao criar Access Point"
-        );
+        Serial.print(".");
 
-        return;
+        tentativas++;
     }
-
-    // =================================================
-    // IP DO ESP32
-    // =================================================
-
-    IPAddress ip =
-        WiFi.softAPIP();
 
     Serial.println();
 
-    Serial.println(
-        "Wi-Fi criado!"
-    );
-
-    Serial.print(
-        "Nome: "
-    );
-
-    Serial.println(
-        AP_SSID
-    );
-
-    Serial.print(
-        "Senha: "
-    );
-
-    Serial.println(
-        AP_PASSWORD
-    );
-
-    Serial.print(
-        "IP do ESP32: "
-    );
-
-    Serial.println(ip);
-
     // =================================================
-    // MOSTRAR SALA
+    // CONECTADO
     // =================================================
 
-    delay(1000);
+    if (
+        WiFi.status() ==
+        WL_CONNECTED
+    )
+    {
+        Serial.println(
+            "Wi-Fi conectado!"
+        );
 
-    telaBase();
+        Serial.print(
+            "IP do ESP32: "
+        );
 
-    tft.setTextColor(TFT_BLACK);
+        Serial.println(
+            WiFi.localIP()
+        );
 
-    centralizarTexto(
-        "Wi-Fi pronto!",
-        70,
-        2
-    );
+        Serial.print(
+            "Servidor: "
+        );
 
-    centralizarTexto(
-        "SENAI-MONITOR",
-        110,
-        2
-    );
+        Serial.println(
+            SERVER_HOST
+        );
 
-    centralizarTexto(
-        "Aguardando servidor...",
-        150,
-        1
-    );
+        consultarAPI();
+    }
 
-    delay(2000);
+    // =================================================
+    // NÃO CONECTADO
+    // =================================================
 
-    // Primeira consulta
-    consultarAPI();
+    else
+    {
+        Serial.println(
+            "Wi-Fi nao conectado!"
+        );
+
+        mostrarErro(
+            "Wi-Fi nao conectado"
+        );
+    }
 }
 
 // =====================================================
