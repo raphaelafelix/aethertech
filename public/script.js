@@ -28,9 +28,14 @@ function fechar(id) { $(id)?.classList.remove('open'); }
 async function fazerLogin() {
   const email = $('l-email').value.trim();
   const senha = $('l-senha').value;
+  const perfil = $('l-perfil').value;
   $('login-erro').textContent = '';
+  if (!perfil) {
+    $('login-erro').textContent = 'Selecione o tipo de usuário.';
+    return;
+  }
   try {
-    const data = await api('POST', '/auth/login', { email, senha });
+    const data = await api('POST', '/auth/login', { email, senha, perfil });
     TOKEN = data.token;
     USUARIO_LOGADO = data.usuario;
     localStorage.setItem('token', TOKEN);
@@ -39,6 +44,14 @@ async function fazerLogin() {
   } catch (e) {
     $('login-erro').textContent = e.message;
   }
+}
+
+function atualizarPlaceholderLogin() {
+  const perfil = $('l-perfil').value;
+  const email = $('l-email');
+  if (perfil === 'Professor') email.placeholder = 'eduardofallabela@gmail.com';
+  else if (perfil === 'Coordenador') email.placeholder = 'e-mail cadastrado pelo Coordenador';
+  else email.placeholder = 'selecione o tipo de usuário';
 }
 
 function sair() {
@@ -161,8 +174,9 @@ function renderSalas() {
     <td>${esc(s.localizacao || '—')}</td>
     <td>${esc(s.recursos || '—')}</td>
     <td><span class="badge ${s.disponivel ? 'b-on' : 'b-off'}">${s.disponivel ? 'Disponível' : 'Indisponível'}</span></td>
-    <td><button class="btn btn-ghost btn-sm" onclick="editarSala(${s.id})">Editar</button>
-        <button class="btn btn-ghost btn-sm" onclick="excluirSala(${s.id})">Excluir</button></td>
+    <td>${String(USUARIO_LOGADO?.perfil || '').toLowerCase() === 'coordenador' ? `
+      <button class="btn btn-ghost btn-sm" onclick="editarSala(${s.id})">Editar</button>
+      <button class="btn btn-ghost btn-sm" onclick="excluirSala(${s.id})">Excluir</button>` : '<span class="muted">Somente visualização</span>'}</td>
   </tr>`).join('')}</tbody></table>`;
 }
 
@@ -175,8 +189,9 @@ function renderProfessores(lista = professores) {
   el.innerHTML = `<table><thead><tr><th>Professor</th><th>Telefone</th><th>Observações</th><th>Ações</th></tr></thead><tbody>
     ${lista.map(p => `<tr>
       <td><strong>${esc(p.nome)}</strong></td><td>${esc(p.telefone)}</td><td>${esc(p.observacoes || '—')}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="editarProfessor(${p.id})">Editar</button>
-      <button class="btn btn-ghost btn-sm" onclick="excluirProfessor(${p.id})">Excluir</button></td>
+      <td>${String(USUARIO_LOGADO?.perfil || '').toLowerCase() === 'coordenador' ? `
+        <button class="btn btn-ghost btn-sm" onclick="editarProfessor(${p.id})">Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="excluirProfessor(${p.id})">Excluir</button>` : '<span class="muted">Somente visualização</span>'}</td>
     </tr>`).join('')}
   </tbody></table>`;
 }

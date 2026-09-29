@@ -24,7 +24,7 @@ async function seed() {
     );
     run(
       'INSERT INTO usuarios (nome, email, senha, perfil) VALUES (?, ?, ?, ?)',
-      ['Professor', 'professor@email.com', hash, 'Professor']
+      ['Eduardo Fallabela', 'eduardofallabela@gmail.com', hash, 'Professor']
     );
 
     const professores = [
@@ -60,7 +60,8 @@ async function seed() {
     console.log('======================================');
     console.log('SEED DE AGENDAMENTO EXECUTADO!');
     console.log('======================================');
-    console.log('Login: coord@email.com | Senha: 123456');
+    console.log('Coordenador: coord@email.com | Senha: 123456');
+    console.log('Professor: eduardofallabela@gmail.com | Senha: 123456');
     console.log('======================================');
   } catch (err) {
     console.error('ERRO NO SEED:', err);

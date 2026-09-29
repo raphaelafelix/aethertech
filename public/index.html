@@ -20,15 +20,23 @@
     </div>
     <div class="login-erro" id="login-erro"></div>
     <div class="fg">
+      <label>Tipo de usuário</label>
+      <select id="l-perfil" onchange="atualizarPlaceholderLogin()">
+        <option value="">Selecione seu perfil</option>
+        <option value="Professor">Professor</option>
+        <option value="Coordenador">Coordenador</option>
+      </select>
+    </div>
+    <div class="fg">
       <label>E-mail</label>
-      <input id="l-email" type="email" placeholder="coord@email.com" onkeydown="if(event.key==='Enter') fazerLogin()">
+      <input id="l-email" type="email" placeholder="selecione o tipo de usuário" onkeydown="if(event.key==='Enter') fazerLogin()">
     </div>
     <div class="fg">
       <label>Senha</label>
       <input id="l-senha" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter') fazerLogin()">
     </div>
     <button class="btn btn-red" id="btn-login" style="width:100%;padding:10px" onclick="fazerLogin()">Entrar</button>
-    <p class="login-help">Acesse com seu CPF e senha cadastrados.</p>
+    <p class="login-help">Selecione seu perfil e entre com o login criado pelo Coordenador.</p>
   </div>
 </div>
 
@@ -126,8 +134,8 @@
 
     <section id="pg-usuarios" class="secao">
       <div class="pg-header">
-        <div><h2>Usuários</h2><p>Gerencie os acessos ao sistema.</p></div>
-        <button class="btn btn-ghost" onclick="abrirUsuario()">+ Novo usuário</button>
+        <div><h2>Usuários</h2><p>Somente o Coordenador pode criar e gerenciar os acessos ao sistema.</p></div>
+        <button class="btn btn-red" onclick="abrirUsuario()">+ Criar login</button>
       </div>
       <div class="pg-body"><div class="card"><div class="card-body tbl-wrap" id="tbl-usuarios"></div></div></div>
     </section>
