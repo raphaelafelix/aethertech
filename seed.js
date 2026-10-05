@@ -43,19 +43,19 @@ async function seed() {
     }
 
     const salas = [
-      ['Sala de Informática 01', 'Laboratório', 30, 'Computadores, projetor, Wi-Fi', 'Bloco A - 1º andar'],
-      ['Sala de Informática 02', 'Laboratório', 30, 'Computadores, projetor, Wi-Fi', 'Bloco A - 1º andar'],
-      ['Sala de Reuniões', 'Reunião', 12, 'TV, câmera, Wi-Fi', 'Bloco A - térreo'],
-      ['Sala Multimídia', 'Multimídia', 40, 'Projetor, caixas de som, Wi-Fi', 'Bloco B - 1º andar'],
-      ['Laboratório de Eletrônica', 'Laboratório', 24, 'Bancadas, equipamentos técnicos, Wi-Fi', 'Bloco B - térreo'],
-      ['Auditório', 'Evento', 120, 'Projetor, som, microfones, ar-condicionado', 'Bloco C - térreo']
+      ['Sala de Informática 01', 'Laboratório', 30, 'Computadores, projetor, Wi-Fi', 'Bloco A - 1º andar', 'Espaço destinado a programação, desenvolvimento de sistemas e aulas práticas de informática.'],
+      ['Sala de Informática 02', 'Laboratório', 30, 'Computadores, projetor, Wi-Fi', 'Bloco A - 1º andar', 'Laboratório para programação, testes, desenvolvimento web e atividades de tecnologia.'],
+      ['Sala de Reuniões', 'Reunião', 12, 'TV, câmera, Wi-Fi', 'Bloco A - térreo', 'Indicada para reuniões, alinhamentos de equipe, orientações e pequenos encontros.'],
+      ['Sala Multimídia', 'Multimídia', 40, 'Projetor, caixas de som, Wi-Fi', 'Bloco B - 1º andar', 'Ideal para apresentações, aulas com recursos audiovisuais e atividades multimídia.'],
+      ['Laboratório de Eletrônica', 'Laboratório', 24, 'Bancadas, equipamentos técnicos, Wi-Fi', 'Bloco B - térreo', 'Laboratório para eletrônica, prototipagem, montagem e atividades técnicas.'],
+      ['Auditório', 'Evento', 120, 'Projetor, som, microfones, ar-condicionado', 'Bloco C - térreo', 'Espaço para eventos, palestras, apresentações e atividades com grande público.']
     ];
 
-    for (const [nome, categoria, capacidade, recursos, localizacao] of salas) {
+    for (const [nome, categoria, capacidade, recursos, localizacao, descricao] of salas) {
       run(`
-        INSERT INTO salas (nome, categoria, capacidade, recursos, localizacao, disponivel)
-        VALUES (?, ?, ?, ?, ?, 1)
-      `, [nome, categoria, capacidade, recursos, localizacao]);
+        INSERT INTO salas (nome, categoria, capacidade, recursos, localizacao, descricao, disponivel)
+        VALUES (?, ?, ?, ?, ?, ?, 1)
+      `, [nome, categoria, capacidade, recursos, localizacao, descricao]);
     }
 
     console.log('======================================');

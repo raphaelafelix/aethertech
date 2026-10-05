@@ -13,14 +13,17 @@ const solicitacao = require('../models/Solicitacao');
 // Adquire de forma assíncrona 
 router.post('/auth/login', async (req, res) => {
     try { // Tentativa
-        const { email, senha } = req.body; // Recebe a requisição do body
-        if (!email || !senha) return res.status(400).json({ erro: 'E-mail e senha são obrigatórios'}); // Se o email e a senha forem falsos, há o retorno de um status e um json informando a situação
+        const { email, senha, perfil } = req.body; // Recebe a requisição do body
+        if (!email || !senha || !perfil) return res.status(400).json({ erro: 'Perfil, e-mail e senha são obrigatórios' });
+        if (!['Coordenador', 'Professor'].includes(perfil)) return res.status(400).json({ erro: 'Perfil inválido' }); // Se o email e a senha forem falsos, há o retorno de um status e um json informando a situação
 
         const usuario = await Usuario.findByEmail(email); // A variável vai esperar com que o usuário seja achado por email
         if (!usuario) return res.status(401).json({ erro: 'Credenciais inválidas'}); // Se o usuário for falso, há o retorno de um status e um json informando a situação
 
         const ok = await Usuario.verificarSenha(senha, usuario.senha); // A variável espera a verificaçãp da senha e do usuário e depois recebe ambos
-        if (!ok) return res.status(401).json({ erro: 'Credenciais inválidas'}) // Se a variável for falsa, há o retorno de um status e um json informando a situação
+        if (!ok) return res.status(401).json({ erro: 'Credenciais inválidas' });
+        if (usuario.ativo !== 1) return res.status(403).json({ erro: 'Este usuário está inativo' });
+        if (usuario.perfil !== perfil) return res.status(403).json({ erro: `Este login pertence ao perfil ${usuario.perfil}. Selecione o perfil correto.` }); // Se a variável for falsa, há o retorno de um status e um json informando a situação
 
         const token = jwt.sign( // Recebe as informações do token e do login 
             { id: usuario.id, nome: usuario.nome, email: usuario.email, perfil: usuario.perfil },
@@ -32,9 +35,23 @@ router.post('/auth/login', async (req, res) => {
     } catch (e) { res.status(500).json({ erro: e.message}); } // Captura o erro e mostra a mensagem de erro
 });
 
-router.get('/salas', auth, async (req, res) => { // Rota que coleta e mostra todas as salas
-    try { res.json(await Salas.findAll())}
-    catch (e) { res.status(500).json({ erro: e.message}); }
+router.get('/salas', auth, async (req, res) => {
+    try {
+        const todas = await Salas.findAll();
+        // Professor não recebe salas marcadas como indisponíveis. O Coordenador continua vendo todas.
+        if (req.usuario.perfil === 'Professor') return res.json(todas.filter(s => s.disponivel));
+        res.json(todas);
+    } catch (e) { res.status(500).json({ erro: e.message}); }
+});
+
+// Salas livres em uma data e intervalo específicos. Usado no formulário e no calendário.
+router.get('/salas/disponiveis', auth, async (req, res) => {
+    try {
+        const { data, inicio, fim } = req.query;
+        if (!data || !inicio || !fim) return res.status(400).json({ erro: 'Data, horário inicial e horário final são obrigatórios' });
+        if (inicio >= fim) return res.status(400).json({ erro: 'O horário final deve ser depois do horário inicial' });
+        res.json(await Salas.findDisponiveis({ data, inicio, fim }));
+    } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
 router.get('/salas/:id', auth, async (req, res) => { // Rota que pesquisa salas pelo id,, com um try para captar erros
@@ -216,7 +233,14 @@ router.post('/usuarios', auth, async (req, res) => {
             return res.status(400).json({ erro: 'Perfil inválido. Use Coordenador ou Professor' });
         if(!nome || !email || !senha)
             return res.status(400).json({ erro: 'Nome, email e senha são obrigatórios'});
-        res.status(201).json(await Usuario.create({nome, email, senha, perfil}));
+        if (senha.length < 6) return res.status(400).json({ erro: 'A senha deve ter pelo menos 6 caracteres' });
+        const novoUsuario = await Usuario.create({nome, email, senha, perfil});
+        if (perfil === 'Professor') {
+            const existentes = await professor.findAll(nome);
+            const mesmoNome = existentes.some(p => p.nome.trim().toLowerCase() === nome.trim().toLowerCase());
+            if (!mesmoNome) await professor.create({ nome, telefone: '', observacoes: 'Professor vinculado ao login criado pelo Coordenador.' });
+        }
+        res.status(201).json(novoUsuario);
     } catch (e) {
         if (e.message?.includes('UNIQUE')) return res.status(400).json({ erro: 'E-mail já cadastrado'});
         res.status(500).json({ erro: e.message});

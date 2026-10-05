@@ -5,6 +5,10 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "sql.js": "^1.14.2"
+    "sql.js": "^1.14.2",
+    "dayjs": "^1.11.13",
+    "@fullcalendar/core": "^6.1.18",
+    "@fullcalendar/daygrid": "^6.1.18",
+    "@fullcalendar/interaction": "^6.1.18"
   }
 }

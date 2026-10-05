@@ -7,6 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Bibliotecas de data/hora e calendário -->
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/locales-all.global.min.js"></script>
 </head>
 <body>
 
@@ -31,7 +35,7 @@
       <label>E-mail</label>
       <input id="l-email" type="email" placeholder="selecione o tipo de usuário" onkeydown="if(event.key==='Enter') fazerLogin()">
     </div>
-    <div class="fg">
+    <div class="fg">  
       <label>Senha</label>
       <input id="l-senha" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter') fazerLogin()">
     </div>
@@ -81,6 +85,23 @@
           <div class="stat cg"><span class="ico">👥</span><div class="lbl">Professores</div><div class="val" id="s-prof">—</div><div class="sub">cadastrados</div></div>
           <div class="stat cb"><span class="ico">🏫</span><div class="lbl">Salas livres</div><div class="val" id="s-piz">—</div><div class="sub">disponíveis para reserva</div></div>
           <div class="stat cp"><span class="ico">⏰</span><div class="lbl">Pendentes</div><div class="val" id="s-pend">—</div><div class="sub">aguardando aprovação</div></div>
+        </div>
+
+        <div class="card calendar-card">
+          <div class="card-head">
+            <div>
+              <h3>Agenda e disponibilidade</h3>
+              <small class="muted">Os blocos vermelhos representam salas ocupadas. Consulte uma data para verificar os horários.</small>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="renderCalendario()">↻ Atualizar calendário</button>
+          </div>
+          <div class="card-body">
+            <div class="calendar-legend">
+              <span><i class="dot dot-free"></i> Sala disponível</span>
+              <span><i class="dot dot-busy"></i> Sala ocupada</span>
+            </div>
+            <div id="fullcalendar"></div>
+          </div>
         </div>
 
         <div class="cal-grid">
@@ -168,6 +189,7 @@
       <div class="fg"><label>Localização</label><input id="p-local" placeholder="Bloco A - 1º andar"></div>
     </div>
     <div class="fg"><label>Recursos disponíveis</label><input id="p-recursos" placeholder="Projetor, computadores, Wi-Fi..."></div>
+    <div class="fg"><label>Descrição / finalidade da sala</label><textarea id="p-descricao" rows="3" placeholder="Ex.: Espaço destinado a programação, desenvolvimento de sistemas e aulas práticas."></textarea></div>
     <div class="fg"><label>Status</label>
       <select id="p-disp"><option value="true">✅ Disponível</option><option value="false">❌ Indisponível</option></select>
     </div>
@@ -213,6 +235,7 @@
       <div class="fg"><label>Nº de participantes</label><input id="soli-participantes" type="number" min="1" value="1"></div>
     </div>
     <div class="fg"><label>Observações</label><textarea id="soli-obs" rows="3" placeholder="Informe equipamentos, organização da sala ou outras necessidades."></textarea></div>
+    <div id="disponibilidade-hint" class="availability-hint">Selecione data e horário para verificar as salas livres.</div>
     <div class="total-box">
       <div class="row"><span>Resumo</span><strong id="resumo-agendamento">Selecione a sala, data e horário</strong></div>
     </div>

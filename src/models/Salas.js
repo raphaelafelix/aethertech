@@ -11,6 +11,7 @@ function formatarSala(row) {
     capacidade: row.capacidade,
     recursos: row.recursos,
     localizacao: row.localizacao,
+    descricao: row.descricao || '',
     disponivel: row.disponivel === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -28,13 +29,13 @@ const Salas = {
     return formatarSala(get('SELECT * FROM salas WHERE id = ?', [id]));
   },
 
-  async create({ nome, categoria = '', capacidade = 0, recursos = '', localizacao = '', disponivel = true }) {
+  async create({ nome, categoria = '', capacidade = 0, recursos = '', localizacao = '', descricao = '', disponivel = true }) {
     await ready;
     if (!nome?.trim()) throw new Error('Nome da sala é obrigatório');
     const info = run(`
-      INSERT INTO salas (nome, categoria, capacidade, recursos, localizacao, disponivel)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [nome.trim(), categoria, Number(capacidade) || 0, recursos, localizacao, disponivel ? 1 : 0]);
+      INSERT INTO salas (nome, categoria, capacidade, recursos, localizacao, descricao, disponivel)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [nome.trim(), categoria, Number(capacidade) || 0, recursos, localizacao, descricao, disponivel ? 1 : 0]);
     return this.findById(info.lastInsertRowid);
   },
 
@@ -46,7 +47,7 @@ const Salas = {
     run(`
       UPDATE salas SET
         nome = ?, categoria = ?, capacidade = ?, recursos = ?,
-        localizacao = ?, disponivel = ?, updated_at = datetime('now')
+        localizacao = ?, descricao = ?, disponivel = ?, updated_at = datetime('now')
       WHERE id = ?
     `, [
       dados.nome ?? atual.nome,
@@ -54,11 +55,30 @@ const Salas = {
       dados.capacidade !== undefined ? Number(dados.capacidade) || 0 : atual.capacidade,
       dados.recursos ?? atual.recursos,
       dados.localizacao ?? atual.localizacao,
+      dados.descricao ?? atual.descricao ?? '',
       dados.disponivel !== undefined ? (dados.disponivel ? 1 : 0) : atual.disponivel,
       id
     ]);
 
     return this.findById(id);
+  },
+
+  async findDisponiveis({ data, inicio, fim } = {}) {
+    await ready;
+    let rows = query('SELECT * FROM salas WHERE disponivel = 1 ORDER BY nome');
+    if (!data || !inicio || !fim) return rows.map(formatarSala);
+
+    return rows
+      .filter(sala => !get(`
+        SELECT id FROM solicitacoes
+        WHERE sala_id = ?
+          AND data_agendamento = ?
+          AND status NOT IN ('cancelado', 'rejeitado')
+          AND horario_inicio < ?
+          AND horario_fim > ?
+        LIMIT 1
+      `, [sala.id, data, fim, inicio]))
+      .map(formatarSala);
   },
 
   async delete(id) {

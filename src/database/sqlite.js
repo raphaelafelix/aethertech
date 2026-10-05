@@ -71,11 +71,18 @@ const ready = (async () => {
       capacidade INTEGER NOT NULL DEFAULT 0,
       recursos TEXT NOT NULL DEFAULT '',
       localizacao TEXT NOT NULL DEFAULT '',
+      descricao TEXT NOT NULL DEFAULT '',
       disponivel INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
+
+  // Migração para projetos já existentes: adiciona a descrição das salas sem apagar os dados.
+  const salaColsAtual = tableInfo('salas');
+  if (!salaColsAtual.some(c => c.name === 'descricao')) {
+    db.run("ALTER TABLE salas ADD COLUMN descricao TEXT NOT NULL DEFAULT ''");
+  }
 
   // Uma solicitação = uma reserva de sala.
   db.run(`

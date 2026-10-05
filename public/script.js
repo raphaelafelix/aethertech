@@ -31,7 +31,7 @@ async function fazerLogin() {
   const perfil = $('l-perfil').value;
   $('login-erro').textContent = '';
   if (!perfil) {
-    $('login-erro').textContent = 'Selecione o tipo de usuário.';
+    $('login-erro').textContent = 'Selecione se o login é de Coordenador ou Professor.';
     return;
   }
   try {
@@ -49,8 +49,8 @@ async function fazerLogin() {
 function atualizarPlaceholderLogin() {
   const perfil = $('l-perfil').value;
   const email = $('l-email');
-  if (perfil === 'Professor') email.placeholder = 'eduardofallabela@gmail.com';
-  else if (perfil === 'Coordenador') email.placeholder = 'e-mail cadastrado pelo Coordenador';
+  if (perfil === 'Professor') email.placeholder = 'login criado pelo Coordenador';
+  else if (perfil === 'Coordenador') email.placeholder = 'login do Coordenador';
   else email.placeholder = 'selecione o tipo de usuário';
 }
 
@@ -102,6 +102,7 @@ async function carregarTudo() {
     renderProfessores();
     renderSolicitacoes();
     preencherSelects();
+    renderCalendario();
     if (String(USUARIO_LOGADO?.perfil || '').toLowerCase() === 'coordenador') carregarusuarios();
   } catch (e) {
     toast(e.message, 'err');
@@ -110,6 +111,59 @@ async function carregarTudo() {
 
 async function carregarcalendario() {
   await carregarTudo();
+  renderCalendario();
+}
+
+let CALENDARIO = null;
+
+function renderCalendario() {
+  const el = $('fullcalendar');
+  if (!el || typeof FullCalendar === 'undefined') {
+    if (el) el.innerHTML = '<div class="empty">A biblioteca de calendário não foi carregada. Verifique a conexão com a internet e atualize a página.</div>';
+    return;
+  }
+  const coord = String(USUARIO_LOGADO?.perfil || '').toLowerCase() === 'coordenador';
+  const eventos = solicitacoes
+    .filter(s => s.status !== 'cancelado' && s.status !== 'rejeitado')
+    .filter(s => coord || s.sala?.disponivel !== false)
+    .map(s => ({
+      id: String(s.id),
+      title: `${s.sala?.nome || 'Sala'} · ${s.horarioInicio}–${s.horarioFim}`,
+      start: `${s.dataAgendamento}T${s.horarioInicio}`,
+      end: `${s.dataAgendamento}T${s.horarioFim}`,
+      extendedProps: { sala: s.sala?.nome, professor: s.professor?.nome, status: s.status }
+    }));
+
+  if (CALENDARIO) {
+    CALENDARIO.removeAllEvents();
+    CALENDARIO.addEventSource(eventos);
+    return;
+  }
+
+  CALENDARIO = new FullCalendar.Calendar(el, {
+    locale: 'pt-br',
+    initialView: 'dayGridMonth',
+    height: 'auto',
+    firstDay: 1,
+    navLinks: true,
+    dayMaxEvents: 3,
+    buttonText: { today: 'Hoje', month: 'Mês' },
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
+    events: eventos,
+    dateClick(info) {
+      abrirsolicitacao();
+      setTimeout(() => { $('soli-data').value = info.dateStr; carregarSalasDisponiveis(); }, 0);
+    },
+    eventClick(info) {
+      const p = info.event.extendedProps;
+      toast(`${p.sala} · ${p.professor} · ${statusLabelTexto(p.status)}`);
+    }
+  });
+  CALENDARIO.render();
+}
+
+function statusLabelTexto(status) {
+  return ({ pendente:'Pendente', aprovado:'Aprovado', rejeitado:'Rejeitado', em_uso:'Em uso', concluido:'Concluído', cancelado:'Cancelado' })[status] || status;
 }
 
 function statusLabel(status) {
@@ -152,34 +206,40 @@ function renderDashboard() {
       ${statusLabel(s.status)}
     </div>`).join('') : '<div class="empty">Nenhum agendamento registrado.</div>';
 
-  $('cal-mapa').innerHTML = salas.length ? salas.map(s => `
-    <div class="mini-row">
-      <span>🏫 <strong>${esc(s.nome)}</strong><br><small>${esc(s.localizacao || 'Localização não informada')} · ${s.capacidade || '—'} lugares</small></span>
-      <span class="badge ${s.disponivel ? 'b-on' : 'b-off'}">${s.disponivel ? 'Livre' : 'Indisponível'}</span>
-    </div>`).join('') : '<div class="empty">Nenhuma sala cadastrada.</div>';
+  const agora = typeof dayjs === 'function' ? dayjs() : { format: () => new Date().toISOString().slice(0, 10) };
+  const hoje = agora.format('YYYY-MM-DD');
+  const horaAgora = agora.format('HH:mm');
+  const coord = String(USUARIO_LOGADO?.perfil || '').toLowerCase() === 'coordenador';
+  const ocupadasAgora = new Set(solicitacoes.filter(s => s.dataAgendamento === hoje && s.horarioInicio <= horaAgora && s.horarioFim > horaAgora && !['cancelado','rejeitado','concluido'].includes(s.status)).map(s => s.sala?.id));
+  $('cal-mapa').innerHTML = salas.length ? salas.map(s => {
+    const ocupada = ocupadasAgora.has(s.id);
+    return `<div class="mini-row">
+      <span>🏫 <strong>${esc(s.nome)}</strong><br><small>${esc(s.localizacao || 'Localização não informada')} · ${s.capacidade || '—'} lugares</small><br><small>${esc(s.descricao || 'Sem descrição')}</small></span>
+      <span class="badge ${ocupada ? 'b-warn' : 'b-on'}">${ocupada ? 'Ocupada agora' : 'Livre'}</span>
+    </div>`;
+  }).join('') : `<div class="empty">${coord ? 'Nenhuma sala cadastrada.' : 'Nenhuma sala disponível.'}</div>`;
 }
 
 function renderSalas() {
   const el = $('tbl-salas');
   if (!salas.length) {
-    el.innerHTML = '<div class="empty">Nenhuma sala cadastrada.</div>';
+    el.innerHTML = '<div class="empty">Nenhuma sala disponível para este perfil.</div>';
     return;
   }
+  const coord = String(USUARIO_LOGADO?.perfil || '').toLowerCase() === 'coordenador';
   el.innerHTML = `<table><thead><tr>
-    <th>Sala</th><th>Categoria</th><th>Capacidade</th><th>Localização</th><th>Recursos</th><th>Status</th><th>Ações</th>
+    <th>Sala</th><th>Categoria</th><th>Capacidade</th><th>Localização</th><th>Recursos</th><th>Descrição</th><th>Status</th>${coord ? '<th>Ações</th>' : ''}
   </tr></thead><tbody>${salas.map(s => `<tr>
     <td><strong>${esc(s.nome)}</strong></td>
     <td>${esc(s.categoria || '—')}</td>
     <td>${s.capacidade || '—'} pessoas</td>
     <td>${esc(s.localizacao || '—')}</td>
     <td>${esc(s.recursos || '—')}</td>
+    <td>${esc(s.descricao || '—')}</td>
     <td><span class="badge ${s.disponivel ? 'b-on' : 'b-off'}">${s.disponivel ? 'Disponível' : 'Indisponível'}</span></td>
-    <td>${String(USUARIO_LOGADO?.perfil || '').toLowerCase() === 'coordenador' ? `
-      <button class="btn btn-ghost btn-sm" onclick="editarSala(${s.id})">Editar</button>
-      <button class="btn btn-ghost btn-sm" onclick="excluirSala(${s.id})">Excluir</button>` : '<span class="muted">Somente visualização</span>'}</td>
+    ${coord ? `<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="editarSala(${s.id})">Editar</button> <button class="btn btn-ghost btn-sm" onclick="excluirSala(${s.id})">Excluir</button></td>` : ''}
   </tr>`).join('')}</tbody></table>`;
 }
-
 function renderProfessores(lista = professores) {
   const el = $('tbl-professores');
   if (!lista.length) {
@@ -235,13 +295,32 @@ async function buscarprof(valor) {
   catch (e) { toast(e.message, 'err'); }
 }
 
-function preencherSelects() {
+function preencherSelects(listaSalas = salas) {
   if ($('soli-prof')) $('soli-prof').innerHTML = '<option value="">Selecione o professor...</option>' +
     professores.map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   if ($('soli-sala')) $('soli-sala').innerHTML = '<option value="">Selecione a sala...</option>' +
-    salas.filter(s => s.disponivel).map(s => `<option value="${s.id}">${esc(s.nome)} · ${s.capacidade || '?'} lugares</option>`).join('');
+    listaSalas.filter(s => s.disponivel).map(s => `<option value="${s.id}">${esc(s.nome)} · ${s.capacidade || '?'} lugares</option>`).join('');
 }
 
+async function carregarSalasDisponiveis() {
+  const data = $('soli-data')?.value;
+  const inicio = $('soli-inicio')?.value;
+  const fim = $('soli-fim')?.value;
+  if (!data || !inicio || !fim || inicio >= fim) {
+    preencherSelects(salas);
+    atualizarResumo();
+    return;
+  }
+  try {
+    const disponiveis = await api('GET', `/salas/disponiveis?data=${encodeURIComponent(data)}&inicio=${encodeURIComponent(inicio)}&fim=${encodeURIComponent(fim)}`);
+    preencherSelects(disponiveis);
+    atualizarResumo();
+    const info = $('disponibilidade-hint');
+    if (info) info.textContent = `${disponiveis.length} sala(s) disponível(is) nesse período.`;
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
 function atualizarResumo() {
   const sala = salas.find(s => String(s.id) === $('soli-sala').value);
   const data = $('soli-data').value;
@@ -254,18 +333,24 @@ function atualizarResumo() {
 
 async function abrirsolicitacao() {
   preencherSelects();
-  $('soli-data').value = '';
+  $('soli-data').value = typeof dayjs === 'function' ? dayjs().format('YYYY-MM-DD') : new Date().toISOString().slice(0, 10);
   $('soli-inicio').value = '';
   $('soli-fim').value = '';
   $('soli-finalidade').value = '';
   $('soli-participantes').value = 1;
   $('soli-obs').value = '';
   atualizarResumo();
+  await carregarSalasDisponiveis();
   abrir('m-solicitacao');
 }
 
 ['soli-sala','soli-data','soli-inicio','soli-fim'].forEach(id => {
-  document.addEventListener('change', e => { if (e.target?.id === id) atualizarResumo(); });
+  document.addEventListener('change', e => {
+    if (e.target?.id === id) {
+      atualizarResumo();
+      if (['soli-data','soli-inicio','soli-fim'].includes(id)) carregarSalasDisponiveis();
+    }
+  });
 });
 
 async function salvarsolicitacao() {
@@ -315,6 +400,7 @@ function abrirsala() {
   $('p-cap').value = '';
   $('p-local').value = '';
   $('p-recursos').value = '';
+  $('p-descricao').value = '';
   $('p-disp').value = 'true';
   abrir('m-sala');
 }
@@ -329,6 +415,7 @@ function editarSala(id) {
   $('p-cap').value = s.capacidade || '';
   $('p-local').value = s.localizacao || '';
   $('p-recursos').value = s.recursos || '';
+  $('p-descricao').value = s.descricao || '';
   $('p-disp').value = String(s.disponivel);
   abrir('m-sala');
 }
@@ -341,6 +428,7 @@ async function salvarsala() {
     capacidade: Number($('p-cap').value) || 0,
     localizacao: $('p-local').value.trim(),
     recursos: $('p-recursos').value.trim(),
+    descricao: $('p-descricao').value.trim(),
     disponivel: $('p-disp').value === 'true'
   };
   if (!body.nome) { toast('Informe o nome da sala.', 'err'); return; }
