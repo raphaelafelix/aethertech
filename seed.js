@@ -3,7 +3,7 @@ const { ready, run } = require('./src/database/sqlite');
 const bcrypt = require('bcryptjs');
 
 async function seed() {
-  try {
+  try {   
     await ready;
     console.log('Limpando dados de agendamento...');
 
